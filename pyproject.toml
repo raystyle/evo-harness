@@ -1,0 +1,21 @@
+[project]
+name = "evo-harness"
+version = "0.4.0"
+description = "Six-stage Graph-of-Loops orchestrator driving codex/kimi/claude in rmux panes; herdr operation plane (monitor console + decision-injection daemon)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "librmux>=0.6.1",
+    "rich>=15.0.0",
+    "watchdog>=6.0.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[project.scripts]
+evo-harness = "evo_harness.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0.0"]
