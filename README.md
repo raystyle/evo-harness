@@ -45,6 +45,43 @@ herdr 会话内（`HERDR_ENV=1`）起 run：自动落位 monitor 右窗格 + 无
 flow 专属 rmux 会话，CLI 单行交接即退，决策（※）/终态（✔）由 notifyd 恰在
 主 agent idle 时注入，零阻塞零后台 shell。
 
+## 人机交互：控制单元 × 操作单元，全程无阻塞
+
+| 类别 | 单元 | 宿主 | 职责 |
+|------|------|------|------|
+| 控制单元 | flow 编排进程 | rmux 后台会话 `evo-<run_id>` | 状态机 / 任务队列 / 门禁 / 自愈 |
+| 控制单元 | worker 池 ×3 | rmux panes | 干活（claude / kimi / codex），产物只有 markdown |
+| 操作单元 | monitor 控制台 | herdr 右窗格 | 六面板直播，只读零干扰 |
+| 操作单元 | notifyd 守护 | 无头进程 | 决策简报注入主 agent（恰在 idle 时） |
+| 决策单元 | 主 agent | herdr 主窗格 | 关键节点批准 / 改道 / 否决（※） |
+
+```
+main window (herdr)                    rmux daemon (independent)
++---------------------------+          +--------------------------+
+| main agent pane   [idle]  |<--inject--+ flow session  evo-<run> |
+|   ^ decision brief (*)    |          |   | task queue           |
+|   | decides via CLI       |          |   v                      |
+| monitor pane (right)      |          | worker x3 panes          |
+|   live 6-panel console    |          |   claude / kimi / codex  |
++---------------------------+          +--------------------------+
+        ^ read-only                      ^ file bus only
+        +---------- .evo_tasks/<run>/ ---+
+```
+
+无阻塞四要点：
+
+1. **主对话永不等待**：`run/review-cycle` 单行交接即退，编排活在 rmux 会话
+   里，关终端、切窗口、重启 herdr 都不影响。
+2. **决策不轮询**：需要主 agent 的节点由 notifyd 投递（idle 门 + 末屏
+   内容复核双锁），通知恰好在能接单的时刻到达。
+3. **观测零干扰**：monitor 纯读文件总线，随时开关重开。
+4. **工作单元互不连坐**：worker 各占 rmux pane（必要时各占 git worktree），
+   卡死由程序三路自愈，不阻塞同伴、不惊动主对话。
+
+人只在决策点出现：程序管机械与自愈，人管批准与方向；批准是责任，
+真 run 决策节点无限期等人，绝不超时默认。完整时序见
+[docs/interaction.md](docs/interaction.md)。
+
 ## 控制模型
 
 - **程序编排**：感知 markdown 产物状态 + agent hook 状态 → 队列/graph 调度 →
