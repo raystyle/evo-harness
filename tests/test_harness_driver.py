@@ -80,6 +80,59 @@ def _idx(log, pred):
     return next(i for i, e in enumerate(log) if pred(e))
 
 
+class _SplitWindow:
+    """spawn 单测窗：记录 split 的 shell_command（空 pane 列表走 split 分支）。"""
+
+    def __init__(self, log):
+        self.log = log
+
+    def list_panes(self):
+        return []
+
+    def pane(self, _i):
+        return self
+
+    def split(self, shell_command=""):
+        self.log.append(("win.split", shell_command))
+        return self
+
+
+def test_spawn_unit_quotes_paths_with_spaces(tmp_path):
+    """rc-r1 must-fix：state_file/cwd 含空格必须逐段 shlex.quote，
+    否则 env 拆参 / cd 失败 → 全池 LAUNCH_FAILED（Windows/WSL 路径常态）。"""
+    import shlex
+
+    from evo_harness.config import HarnessConfig
+
+    log = []
+    d, _, _ = _mk(log)
+    d.config = HarnessConfig()
+
+    async def _win(_stage, cwd=None):
+        return _SplitWindow(log)
+    d.window_for = _win
+
+    sf = tmp_path / "a b" / "state x.json"      # 两段都含空格
+    cwd = tmp_path / "my repo" / "wt u1"
+    asyncio.run(d.spawn_unit(
+        "pool", "claude", cwd=str(cwd), unit_id="worker-claude", state_file=sf,
+    ))
+    cmd = log[-1][1]
+    # shell 再解析后逐段还原：env 三键完整、cd 到位
+    parts = shlex.split(cmd)
+    assert parts[:4] == [
+        "env",
+        f"EVO_RUN={d.run_id}",
+        "EVO_UNIT=worker-claude",
+        f"EVO_STATE_FILE={sf.resolve()}",
+    ]
+    cd_at = parts.index("cd")
+    assert parts[cd_at + 1] == str(cwd)
+    assert parts[cd_at + 2] == "&&" and parts[cd_at + 3] == "exec"
+    # 无特殊字符的取值不加多余引号（可读性不回退）
+    assert f"EVO_RUN={d.run_id}" in cmd
+
+
 def test_drive_three_stage_paste_then_encoded_enter():
     """三段式：load-buffer → paste-buffer -p -d → 静默等待 → send-keys -H 0d。"""
     log = []

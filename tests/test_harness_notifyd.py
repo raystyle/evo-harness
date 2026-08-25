@@ -820,6 +820,7 @@ def console(monkeypatch):
     async def _noop_flow(args):
         return 0
 
+    monkeypatch.setattr("shutil.which", lambda n: "/fake/bin/" + n)
     monkeypatch.setattr(
         "evo_harness.cli._place_herdr_monitor",
         lambda rid, shared: seen["mon"].append((rid, shared)) or "w4:pM")

@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import shlex
 from pathlib import Path
 
 from librmux import Pane, Session
@@ -157,17 +158,24 @@ class HarnessDriver:
 
     async def spawn_unit(self, stage: str, agent: str, cwd: str | None = None,
                          unit_id: str = "", state_file: Path | None = None) -> Pane:
-        """在 stage window 开 pane 跑 agent；注入身份 env（hook 状态通道用）。"""
+        """在 stage window 开 pane 跑 agent；注入身份 env（hook 状态通道用）。
+
+        前缀逐段 shlex.quote（rc-r1 must-fix）：仓库/worktree 路径任一段含
+        空格（Windows/WSL 用户目录常态）时，裸插值会让 env 拆参、cd 失败，
+        整池 LAUNCH_FAILED。
+        """
         window = await self.window_for(stage)
         cmdline = self.config.agent_cmdline(agent)
         prefix = ""
         if state_file is not None:
             prefix = (
-                f"env EVO_RUN={self.run_id} EVO_UNIT={unit_id} "
-                f"EVO_STATE_FILE={state_file.resolve()} "
+                "env "
+                f"EVO_RUN={shlex.quote(self.run_id)} "
+                f"EVO_UNIT={shlex.quote(unit_id)} "
+                f"EVO_STATE_FILE={shlex.quote(str(state_file.resolve()))} "
             )
         if cwd:
-            prefix += f"cd {cwd} && exec "
+            prefix += f"cd {shlex.quote(str(cwd))} && exec "
         full = prefix + cmdline
 
         def _run() -> Pane:

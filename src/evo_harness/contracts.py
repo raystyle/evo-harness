@@ -85,6 +85,13 @@ class ContractStore:
             raise ContractError(f"unit 重复: {unit_id}")
         if not branch or "/" not in branch:
             raise ContractError(f"branch 需形如 <topic>/<name>: {branch!r}")
+        # 1 unit = 1 branch（worktrees 铁律）：重复 branch 会让第二个
+        # `worktree add -b` 必败（rc-r1 must-fix 同源可达路径），登记期即拒
+        taken = [u for u, v in allocs.items() if v.get("branch") == branch]
+        if taken:
+            raise ContractError(
+                f"branch 已被 unit {taken} 占用（1 unit = 1 branch）: {branch!r}"
+            )
         if not scope:
             raise ContractError("scope 至少一个路径")
         allocs[unit_id] = {

@@ -1,5 +1,28 @@
 # Changelog
 
+## [Unreleased]
+
+- fix: `run`/`review-cycle` 兜底非 HardStop 异常（WorktreeError 等），
+  一律落 ESCALATE 终态 + exit 2——旧实现裸穿后 run.json 假活 running、
+  notifyd 无限空转（accept-v04-r2 rc-r1 must-fix）
+- fix: `contract alloc` 校验 branch 跨 unit 唯一（1 unit = 1 branch），
+  重名 branch 不再等到第二个 `worktree add -b` 必败
+- fix: `spawn_unit` 前缀逐段 `shlex.quote`，仓库/worktree 路径含空格
+  不再 env 拆参 / cd 失败炸整池
+- fix: review/fixer 提示词模板去 ProjectEvo 硬编码布局（AGENTS.md、
+  `.evotools/`、`skills/evo/`、`evo_gate.py`），改为「以仓内实际存在者
+  为准」+ 原子性范围约束 + 通用测试门禁命令
+- chore: `.claude/settings.json` 出库并忽略（安装器运行期产物，含本机
+  解释器绝对路径，不入库污染新机）
+- ci: GitHub Actions 门禁（uv sync + pytest + uv build）
+- test: main() 集成 fixture 显式 mock `shutil.which`，干净 runner（无 rmux/herdr）
+  下 CI 门禁亦全绿（accept-v04-r2 rc-r2 must-fix）
+- chore: `.claude/settings.json.bak` 出库（rc-r3 must-fix：旧配置副本随
+  e02637e 误入 git，携本机解释器绝对路径；磁盘文件保留且已被忽略）
+- fix: `run --plan-only` 路径同款非 HardStop 兜底（`_prepare` 一并入
+  try）——旧实现异常裸穿后 run.json 假活 running（accept-v04-r2 rc-r4
+  must-fix，rc-r1 兜底之遗漏分支）
+
 ## [v0.4.0] - 2026-08-25
 
 由 ProjectEvo `.evotools/evo_harness` 抽离为独立项目（源头同日已发

@@ -54,3 +54,14 @@ def test_contract_store_rejects_garbage(tmp_path):
     store.allocs_p.write_text("[1, 2]", encoding="utf-8")
     with pytest.raises(ContractError):
         store.alloc("u2", "t/u2", ["s"], [])
+
+
+def test_alloc_branch_unique_across_units(tmp_path):
+    """rc-r1 must-fix 同源：1 unit = 1 branch，重名 branch 会让第二个
+    `worktree add -b` 必败（且异常裸穿——另见 escalation 兜底），登记期即拒。"""
+    store = _store(tmp_path)
+    store.goal("g", [], ["c"])
+    store.alloc("u1", "agent/feat", ["src/**"], [])
+    with pytest.raises(ContractError, match="已被 unit"):
+        store.alloc("u2", "agent/feat", ["docs/**"], [])
+    store.alloc("u2", "agent/other", ["docs/**"], [])  # 不同 branch 通过

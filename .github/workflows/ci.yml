@@ -1,0 +1,23 @@
+name: ci
+
+# 独立仓质量门禁（rc-r1 must-fix）：回归测试 + 打包双闸。
+# 测试全 fake/mock（pytest 宿主护栏拒真 herdr/rmux），无需外部服务。
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: 安装依赖
+        run: uv sync
+      - name: 回归测试
+        run: uv run pytest -q
+      - name: 打包检查
+        run: uv build

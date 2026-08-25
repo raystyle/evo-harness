@@ -5,3 +5,6 @@ dist/
 *.egg-info/
 .pytest_cache/
 notifyd.log
+# claude 项目级 hook 是 install_claude_project_hooks 的运行期产物（含本机解释器绝对路径，不出库）
+.claude/settings.json
+.claude/settings.json.bak

@@ -147,6 +147,7 @@ def placed(monkeypatch):
     async def _noop_flow(args):
         return 0
 
+    monkeypatch.setattr("shutil.which", lambda n: "/fake/bin/" + n)
     monkeypatch.setattr(cli, "_place_herdr_monitor",
                         lambda rid, shared: seen.append((rid, shared)) or "w4:pM")
     monkeypatch.setattr(cli, "_spawn_notifyd", lambda rid, shared: True)

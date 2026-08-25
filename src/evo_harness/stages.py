@@ -528,6 +528,17 @@ class Harness:
             self.bus.log_event("hard_stop", f"{exc.kind}: {exc.detail}")
             print(f"[evo-harness] 硬停止 {exc.kind}: {exc.detail}", flush=True)
             return 2
+        except Exception as exc:
+            # rc-r1 must-fix：非 HardStop 异常（WorktreeError/OSError 等，
+            # 非 git 目录、branch 重名、git 缺位皆可达）不得裸穿——
+            # run.json 假活 running 会让 notifyd 无限空转、wait 等满超时
+            self.bus.set_stage("ESCALATE", "escalated")
+            self.bus.log_event(
+                "hard_stop", f"UNCAUGHT {type(exc).__name__}: {exc}",
+            )
+            print(f"[evo-harness] 未预期异常 {type(exc).__name__}: {exc}",
+                  flush=True)
+            return 2
         finally:
             # 不变式④：执行单元（常驻窗格池）只在整任务终态后关闭
             try:
@@ -684,8 +695,8 @@ class Harness:
                     prompt = (
                         f"# 第 {round_no} 轮生产就绪 review（维度：{dim}）\n\n"
                         f"目标：{goal}\n\n"
-                        "审查对象：仓库当前状态（AGENTS.md、skills/evo/、"
-                        ".evotools/ 各工具源码、tests/、CI、README）。\n"
+                        "审查对象：仓库当前状态（README、docs/、源码树、tests/、"
+                        "CI 与构建配置；以仓内实际存在者为准，不预设布局）。\n"
                         "要求：逐文件抽查而非全读；每条发现标 "
                         "[must-fix]/[should-fix]/[ok]，给位置与一句话修法。\n"
                     )
@@ -754,14 +765,13 @@ class Harness:
                     fix_prompt = (
                     "# 修复任务\n\n按下列 must-fix 清单逐条修复仓库：\n"
                     f"{fl_path}\n\n"
-                    "范围边界（硬约束）：**禁止修改 `.evotools/` 与 "
-                    "`skills/evo/templates/tools/` 下的编排器源码**，编排进程"
-                    "正在运行，run 中途改动会破坏后续新进程（prod-r3 实证：结构"
-                    "损伤致 review_cycle 不可调用、终态被覆盖）。涉及编排器的发现"
-                    "一律降级 `[should-fix]` 写进报告，由 host 在 run 结束后处理。\n"
-                    "每条修完跑 `uv run pytest tests/ -q` 与 "
-                    "`uv run skills/evo/scripts/evo_gate.py`，全绿才算完成；"
-                    "必要处同步 CHANGELOG [Unreleased]。\n"
+                    "范围边界（硬约束）：改动逐条原子落地——每修完一条，仓库"
+                    "保持可导入、全量测试通过，才可开下一条；严禁重构无关代码"
+                    "（编排进程正在运行，半成品状态会破坏后续新进程，prod-r3"
+                    "实证）。\n"
+                    "每条修完跑本仓测试（如 `uv run pytest -q`，仓内如有专门"
+                    "门禁脚本一并跑），全绿才算完成；必要处同步 CHANGELOG "
+                    "[Unreleased]。\n"
                     f"完成后写 {fix_out}："
                     '{"fixed": ["每条一句话"], "tests": "pass|fail", '
                     '"gate": "pass|fail"}\n'
@@ -777,6 +787,16 @@ class Harness:
             self.bus.set_stage("ESCALATE", "escalated")
             self.bus.log_event("hard_stop", f"{exc.kind}: {exc.detail}")
             print(f"[evo-harness] 硬停止 {exc.kind}: {exc.detail}", flush=True)
+            return 2
+        except Exception as exc:
+            # rc-r1 must-fix：同 run()——非 HardStop 异常一律落 ESCALATE 终态，
+            # 不许 run.json 假活 running 拖死 notifyd/wait
+            self.bus.set_stage("ESCALATE", "escalated")
+            self.bus.log_event(
+                "hard_stop", f"UNCAUGHT {type(exc).__name__}: {exc}",
+            )
+            print(f"[evo-harness] 未预期异常 {type(exc).__name__}: {exc}",
+                  flush=True)
             return 2
         finally:
             try:

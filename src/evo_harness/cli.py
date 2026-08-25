@@ -592,8 +592,8 @@ async def _run_flow(args) -> int:
         return 0
 
     if getattr(args, "plan_only", False):
-        await harness._prepare()
         try:
+            await harness._prepare()
             harness.sm.enter("explore")
             await harness._stage_explore(args.goal)
             harness.sm.enter("research")
@@ -604,6 +604,17 @@ async def _run_flow(args) -> int:
             harness.bus.set_stage("ESCALATE", "escalated")
             harness.bus.log_event("hard_stop", f"{exc.kind}: {exc.detail}")
             print(f"[evo-harness] 硬停止 {exc.kind}: {exc.detail}", flush=True)
+            return 2
+        except Exception as exc:
+            # rc-r4 must-fix：与 run()/review_cycle() 同款兜底——plan-only
+            # 路径（_prepare 也在内）非 HardStop 异常不得裸穿，否则
+            # run.json 假活 running（非 git 目录 WorktreeError 即达）
+            harness.bus.set_stage("ESCALATE", "escalated")
+            harness.bus.log_event(
+                "hard_stop", f"UNCAUGHT {type(exc).__name__}: {exc}",
+            )
+            print(f"[evo-harness] 未预期异常 {type(exc).__name__}: {exc}",
+                  flush=True)
             return 2
         print("plan-only 完成：三契约已落盘")
         return 0
