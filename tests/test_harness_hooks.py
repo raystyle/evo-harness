@@ -28,8 +28,9 @@ def test_hook_script_event_mapping(tmp_path):
         ('{"hook_event_name": "PreToolUse"}', "working"),
         ('{"hook_event_name": "Stop"}', "idle"),
         ('{"hook_event_name": "SessionStart"}', "idle"),
-        # claude 的 Notification 是「回合结束等输入」提示 → idle（smoke-9 实证）
-        ('{"hook_event_name": "Notification"}', "idle"),
+        # Notification 含糊（tips/权限/等输入皆有）→ unknown 不装懂：
+        # 映 idle 会让 pool 误判空闲狂催工作中的 agent（readme-shot 实证）
+        ('{"hook_event_name": "Notification"}', "unknown"),
         ('{"hook_event_name": "PermissionRequest"}', "blocked"),
     ):
         subprocess.run(

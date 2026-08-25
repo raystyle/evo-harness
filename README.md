@@ -10,6 +10,11 @@ explore → research → plan → execute ⇄ review → merge → DONE
 两平面架构：**控制平面 rmux**（编排 panes/agents，flow 本体跑在专属 rmux 后台会话）；
 **操作平面 herdr**（宿主侧窗格操作：monitor 单窗格控制台 + notifyd 决策唤醒守护）。
 
+![console](docs/assets/console.png)
+
+herdr 会话内实拍：左窗格主 agent（决策者），右窗格 monitor 控制台，
+六面板直播执行单元清单 / 目标 / 阶段图 / 决策值守 / 三 agent 状态 / 事件流。
+
 ## 前提（运行时三依赖）
 
 | 依赖 | 用途 | 检查 |

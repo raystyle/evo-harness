@@ -49,7 +49,7 @@ def test_five_states_exact_values():
     [
         ("sessionstart", AgentState.IDLE),
         ("stop", AgentState.IDLE),
-        ("notification", AgentState.IDLE),  # claude 回合结束提示非 blocked
+        ("notification", AgentState.UNKNOWN),  # 含糊不装懂：不触发催写
         ("userpromptsubmit", AgentState.WORKING),
         ("pretooluse", AgentState.WORKING),
         ("posttoolusefailure", AgentState.WORKING),

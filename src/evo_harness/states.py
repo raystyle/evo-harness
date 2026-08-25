@@ -39,7 +39,7 @@ HOOK_STATE_MAP: dict[str, str] = {
     "stop": "idle",
     "interrupt": "idle",
     "sessionend": "unknown",  # hook 脚本无此键 → unknown（对拍测试锁定）
-    "notification": "idle",
+    "notification": "unknown",  # 含糊不装懂（催写误触发教训，readme-shot 实证）
     "userpromptsubmit": "working",
     "pretooluse": "working",
     "posttooluse": "working",

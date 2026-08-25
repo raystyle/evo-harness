@@ -32,7 +32,8 @@ STATE_MAP = {
     "subagentstart": "working", "subagentstop": "working",
     "precompact": "working",
     "permissionrequest": "blocked", "permissionresult": "working",
-    "notification": "idle",  # claude 回合结束提示（smoke-9 实证非 blocked）
+    "notification": "unknown",  # 含糊（tips/权限皆有）：不装懂，不触发催写
+    # （readme-shot-r1/r2 实证：映 idle 会让 pool 误判空闲狂催工作中的 agent）
     "working": "working", "blocked": "blocked", "unknown": "unknown",
 }
 
