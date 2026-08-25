@@ -129,6 +129,9 @@ DIALOGS: dict[str, list[tuple[str, tuple[str, ...]]]] = {
         ("no, exit", ("2", "Enter")),
         # 防御：settings 异常时的模态框，选 3「不带这些设置继续」保 run 不死
         ("settings error", ("3", "Enter")),
+        # hook 信任确认（grok-debut-r3 实证：hook 命令改指中央单点后 claude
+        # 视为新 hook 弹「Enter to confirm · Esc to cancel」，指针消息被吞）
+        ("enter to confirm", ("Enter",)),
     ],
 }
 
