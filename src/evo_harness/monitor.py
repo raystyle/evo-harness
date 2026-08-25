@@ -72,7 +72,9 @@ def _fmt_event(kind: str, detail: str) -> tuple[str, str]:
         m = _re.match(r"(\S+) 请求决策", detail)
         return "※", (f"{m.group(1)} 等待主 agent 决策" if m else detail[:72])
     if kind == "hooks":
-        return "·", "claude/codex/kimi 三端状态 hook 已安装"
+        # detail 头部已带 agent 列表（stages 侧拼），流里透传去 dict 尾巴
+        head = detail.split(":")[0]
+        return "·", head
     if kind == "pool":
         m = _re.search(r"(\d+) worker.*?(\d+)s", detail)
         if m:

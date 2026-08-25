@@ -455,7 +455,9 @@ class Harness:
                 install_all, self.repo_root,
                 include_global=self.config.install_global_hooks,
             )
-            self.bus.log_event("hooks", f"状态 hook: {installed}")
+            sides = "/".join(installed)
+            self.bus.log_event(
+                "hooks", f"{sides} 状态 hook 已安装: {installed}")
             wrote = await asyncio.to_thread(pretrust_all, self.repo_root)
             if any(wrote.values()):
                 self.bus.log_event("pretrust", f"{self.repo_root}: {wrote}")
