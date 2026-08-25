@@ -1,4 +1,4 @@
-"""三契约 CLI 生成回归——控制面 JSON 由程序生成，模型只填参数。
+"""三契约 CLI 生成回归，控制面 JSON 由程序生成，模型只填参数。
 
 r5/r6 两轮死于模型手写 JSON 形状（数组/map、缺文件）；contracts.ContractStore
 保证形状，门禁照常校验（双保险）。
@@ -50,7 +50,7 @@ def test_contract_store_rejects_garbage(tmp_path):
     with pytest.raises(ContractError):
         store.merge_order(["a", "ghost"])  # 未登记 step
     store.merge_order(["a", "b"])          # 完整覆盖即通过
-    # 手写破坏（allocations 变数组）后再 alloc 必须拒——逼回 CLI 通道
+    # 手写破坏（allocations 变数组）后再 alloc 必须拒·逼回 CLI 通道
     store.allocs_p.write_text("[1, 2]", encoding="utf-8")
     with pytest.raises(ContractError):
         store.alloc("u2", "t/u2", ["s"], [])

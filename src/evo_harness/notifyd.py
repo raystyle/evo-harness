@@ -1,6 +1,6 @@
 """决策唤醒守护（herdr 操作平面信使）。
 
-架构定调（2026-08-25 用户）：**控制平面 rmux，操作平面 herdr**——
+架构定调（2026-08-25 用户）：**控制平面 rmux，操作平面 herdr**，
 编排（panes/agents 调度）恒走 rmux/librmux；宿主侧窗格操作与 agent
 状态查询/注入走 herdr CLI。本守护是操作平面的信使：
 
@@ -8,7 +8,7 @@
       → herdr agent wait <主窗格> --until idle   （idle 门：只在主 agent
         可接单的时刻注入，不打断工作中的 turn）
       → herdr pane read 末屏内容复核（双锁：状态通道会失明，末屏才是
-        地面真相——spinner/计时/对话框在屏就不投）
+        地面真相，spinner/计时/对话框在屏就不投）
       → herdr agent prompt <主窗格> <决策简报>    （注入即成为主 agent 的
         一条用户消息，携 decide 命令）
 
@@ -35,7 +35,7 @@ RUN_GRACE_S = 60.0  # 落位竞态宽限：run.json 由 _prepare 在落位之后
 
 # 内容级复核特征（idle 门第二道锁）。单靠 herdr agent 状态不保险：状态
 # 通道会失明（r6 实证：卡 working/Stop 不触发），末屏内容才是地面真相
-# [实证: 2026-08-25 本机 herdr pane read 实拍——工作中尾部有 ✻ spinner
+# [实证: 2026-08-25 本机 herdr pane read 实拍·工作中尾部有 ✻ spinner
 # 行 / ⎿ Running… / esc to interrupt，空闲只有 ❯ 输入框 + 状态行]。
 _SPINNER_CHARS = ("✻", "✳", "◐", "◑", "◒", "◓", "⏳")  # 行首 spinner 字形
 _BUSY_PHRASES = ("to interrupt", "running…")
@@ -62,7 +62,7 @@ def _tail_looks_busy(tail: str) -> tuple[bool, str]:
 
 
 class HerdrClient:
-    """herdr CLI 薄封装——操作平面唯一进出口（测试 mock subprocess.run）。
+    """herdr CLI 薄封装，操作平面唯一进出口（测试 mock subprocess.run）。
 
     全部方法失败返回 None/False 而不抛：守护 fail-open，任何 herdr 侧
     异常都不许 crash 掉唤醒通道。
@@ -162,7 +162,7 @@ def build_terminal_message(run_id: str, shared: Path, snap: dict) -> str:
     head = (f"[evo-harness ✔ run 结束] run={run_id} status={status} "
             f"stage={stage}")
     if status == "escalated":
-        tail = (f"\n硬停止——现场: uv run evo-harness status --run-id {run_id}"
+        tail = (f"\n硬停止，现场: uv run evo-harness status --run-id {run_id}"
                 f"；处置后清场: uv run evo-harness clean-wt {run_id}")
     elif status == "aborted":
         tail = "\nrun 已中止（会话与 worktree 已清理）"
@@ -265,15 +265,15 @@ def _deliver(client: HerdrClient, main_pane: str, text: str,
 
     返回三态：
     - "ok"   注入成功；
-    - "skip" 还不到投递时机（idle 没等到 / 屏上还有活或对话框）——
+    - "skip" 还不到投递时机（idle 没等到 / 屏上还有活或对话框），
       不记账，下一拍重查（瞬时态，不该吃 30s 退避）；
-    - "fail" 注入被拒（blocked 拒发/超时）——记失败账走短退避。
+    - "fail" 注入被拒（blocked 拒发/超时），记失败账走短退避。
     """
     wait_ok = client.agent_wait_idle(main_pane, idle_wait_ms)
     tail = client.pane_read_tail(main_pane)
     if tail is not None:
         # 内容复核是权威兜底（accept-notifyd-r6 实证：状态通道对主窗格
-        # 失明，wait 每 600s 超时、决策干等 30+ 分钟零注入）——末屏无
+        # 失明，wait 每 600s 超时、决策干等 30+ 分钟零注入）·末屏无
         # 忙碌特征即视为可投，wait 结果仅作参考
         busy, _hit = _tail_looks_busy(tail)
         if busy:
@@ -328,7 +328,7 @@ def run_notifyd(shared: Path, run_id: str, main_pane: str = "",
     """守护入口（cli notifyd）。终态通知成功即退；run 目录消失即退。
 
     落位竞态宽限：落位发生在 main() 进 flow 之前，run.json 由 _prepare
-    稍后才写（accept-notifyd-r1 实证 monitor 即死于这条竞态）——宽限
+    稍后才写（accept-notifyd-r1 实证 monitor 即死于这条竞态），宽限
     grace_s 等它出现，超时才报「无 run」。
     """
     run_dir = Path(shared) / run_id

@@ -19,7 +19,7 @@ def goal_brief(goal: str, limit: int = 44) -> str:
     """从 goal 提炼一句精练描述（生成任务时算好存 run.json.goal_brief）。
 
     取首个语义子句（最早的 。，（；换行 且子句 ≥8 字），超宽截断加 …。
-    控制面确定性提取，不调模型——括号补充/逗号从句即细节边界 [实证: 目标文本形态]。
+    控制面确定性提取，不调模型，括号补充/逗号从句即细节边界 [实证: 目标文本形态]。
     """
     g = " ".join(goal.split())
     cuts = [i for i in (g.find(s) for s in ("。", "（", "，", "；", "\n")) if i >= 8]
@@ -32,7 +32,7 @@ def goal_brief(goal: str, limit: int = 44) -> str:
 
 def normalize_allocations(data) -> dict | None:
     """allocations 归一化：list[{unit_id,...}] → {unit_id: {...}}（r5 实证：
-    planner 按模板字面写出数组——语义对形状错）；dict 原样；垃圾返回 None。"""
+    planner 按模板字面写出数组，语义对形状错）；dict 原样；垃圾返回 None。"""
     if isinstance(data, dict) and data:
         return data
     if (
@@ -139,7 +139,7 @@ class FileBus:
     def request_decision(self, node: str, brief: str, choices: list[str],
                          default: str, timeout_s: float = 600.0) -> Path:
         """主 agent 决策节点：编排程序到关键节点请主 agent 参与决策，
-        而非盲等最终产物（默认策略超时兜底——无人值守 run 不断流）。"""
+        而非盲等最终产物（默认策略超时兜底，无人值守 run 不断流）。"""
         d = self.root / "decisions"
         d.mkdir(exist_ok=True)
         p = d / f"{node}.json"
@@ -198,7 +198,7 @@ class FileBus:
     async def await_decision(self, node: str, timeout_s: float) -> str:
         """等决策落 choice（inotify 事件驱动）。
 
-        timeout_s <= 0：无限期等主 agent（真 run 语义——批准是责任）；
+        timeout_s <= 0：无限期等主 agent（真 run 语义，批准是责任）；
         >0：超时自动落 default（fake/E2E autopilot）。
         """
         from .events import wait_for_files as aff

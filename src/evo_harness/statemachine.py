@@ -39,7 +39,7 @@ class StateMachine:
     def __init__(self, bus, budget, no_progress_interval: float = 60.0) -> None:
         """no_progress_interval：指纹采样间隔（秒）。
 
-        真实 agent 一轮思考可能数分钟不落盘——按轮询间隔（2s）数「无变化」
+        真实 agent 一轮思考可能数分钟不落盘，按轮询间隔（2s）数「无变化」
         会误杀；按本间隔采样、连续 budget.no_progress_rounds 次无变化才停。
         """
         self.bus = bus

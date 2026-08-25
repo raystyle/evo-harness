@@ -1,4 +1,4 @@
-"""提交死会话（stalled submit）自愈回归——p8-herdr-r1 实证。
+"""提交死会话（stalled submit）自愈回归，p8-herdr-r1 实证。
 
 k3 config.invalid 卡 15 分钟：hook 态停在陈旧 working（最后事件
 userpromptsubmit，零 PreToolUse），nudge 被 `state not in (idle, None)` 挡死，
@@ -102,7 +102,7 @@ def test_wait_artifact_resubmits_on_stale(tmp_path):
 
 def test_multi_artifact_requires_all(tmp_path):
     """planner 三契约：tuple 产物必须全存在才算完成（r1/r4 GATE_FAILED 实证
-    ——单盯第一份会在 agent 写后续契约时误判 done 提前释放）。"""
+    ，单盯第一份会在 agent 写后续契约时误判 done 提前释放）。"""
     from evo_harness.pool import WorkerPool as P
     a1 = tmp_path / "goal_spec.json"
     a2 = tmp_path / "plan.json"
@@ -125,7 +125,7 @@ def test_multi_artifact_requires_all(tmp_path):
 
 
 def test_wait_artifact_nudges_immediately_when_idle(tmp_path):
-    """idle + 缺产物 → 切片边界即催写（不等 900s 轮边界——r5 幻写实证）。"""
+    """idle + 缺产物 → 切片边界即催写（不等 900s 轮边界，r5 幻写实证）。"""
     pool, w, drv = _mk_pool(tmp_path, "stop", 30, state_val="idle")
     artifact = tmp_path / "out2" / "summary.md"
     artifact.parent.mkdir()
@@ -153,7 +153,7 @@ def test_wait_artifact_nudges_immediately_when_idle(tmp_path):
 
 
 def test_wait_artifact_recovers_silent_worker(tmp_path):
-    """r6 死态：state 卡 working（ts 陈旧、非 userpromptsubmit）——idle 催写与
+    """r6 死态：state 卡 working（ts 陈旧、非 userpromptsubmit），idle 催写与
     submit-stale 两路都探测不到，hook 静默判定重提任务行。"""
     pool, w, drv = _mk_pool(tmp_path, "pretooluse", 400)  # working，7 分钟前
     artifact = tmp_path / "out3" / "summary.md"
@@ -275,7 +275,7 @@ def test_timeout_redispatch_hard_stops_after_second_miss(tmp_path):
 
 
 def test_submit_stale_respects_nudge_budget(tmp_path):
-    """审计 r3 must：submit-stale 分支也吃 nudges_left 总预算——死会话
+    """审计 r3 must：submit-stale 分支也吃 nudges_left 总预算，死会话
     不许每 30s 无限重提到 900s（三路自愈共享预算的文档才是契约）。"""
     pool, w, drv = _mk_pool(tmp_path, "userpromptsubmit", 400)
     artifact = tmp_path / "out4" / "x.json"

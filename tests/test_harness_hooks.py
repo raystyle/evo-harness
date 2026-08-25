@@ -144,7 +144,7 @@ def test_install_hooks_schema_and_idempotent(tmp_path):
     entry = data["hooks"]["UserPromptSubmit"][0]
     assert entry["matcher"] == "*"
     hook = entry["hooks"][0]
-    # schema 三件套——缺 type 会弹 Settings Error 模态框（实证坑）
+    # schema 三件套·缺 type 会弹 Settings Error 模态框（实证坑）
     assert hook["type"] == "command"
     # 跨平台：当前解释器绝对路径（Windows 无 python3，sys.executable 三端可用）
     assert hook["command"].startswith(f'"{sys.executable}"')

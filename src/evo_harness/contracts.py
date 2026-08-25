@@ -1,8 +1,8 @@
 """三契约的 CLI 生成器（控制面 JSON 一律程序生成，模型只填参数）。
 
 设计原则（r5/r6 教训定稿）：
-- **markdown 是模型的产物**（报告/研究/评审——自然语言内容）
-- **JSON 是编排程序的结构化数据**——形状由本模块保证，模型通过 CLI 参数
+- **markdown 是模型的产物**（报告/研究/评审，自然语言内容）
+- **JSON 是编排程序的结构化数据**，形状由本模块保证，模型通过 CLI 参数
   填内容，绝不手写 JSON 文件（手写两次死于形状：r5 数组/map、r1 缺文件）
 
 planner agent 在任务里执行 `evo-harness contract ...` 登记三契约；
@@ -79,7 +79,7 @@ class ContractStore:
         self._check_id(unit_id, "unit id")
         allocs = _load(self.allocs_p, {})
         if not isinstance(allocs, dict):
-            raise ContractError("allocations.json 已被外部写坏（非 dict）——"
+            raise ContractError("allocations.json 已被外部写坏（非 dict），"
                                 "禁止手写 JSON，只能用 contract 命令登记")
         if unit_id in allocs:
             raise ContractError(f"unit 重复: {unit_id}")
@@ -104,7 +104,7 @@ class ContractStore:
         _atomic_write(self.plan_p, plan)
         # 计划完成标记（最后一步落）：CLI 逐条原子登记使「三文件存在」不再是
         # 完成信号（r7 实证：第一条 alloc 就齐了三文件，等待提前返回而
-        # planner 还在继续登记）——merge-order 是模板收口步，由它落 COMPLETE
+        # planner 还在继续登记）·merge-order 是模板收口步，由它落 COMPLETE
         _atomic_write(self.plan_p.parent / "COMPLETE.json",
                       {"merge_order": order, "units": len(
                           _load(self.allocs_p, {}))})

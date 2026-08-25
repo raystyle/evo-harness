@@ -1,6 +1,6 @@
 """异步纪律 lint（AST 级）：evo_harness 源码禁止 time.sleep 调用。
 
-只检测真实调用节点——注释/文档里的字样不误报。
+只检测真实调用节点，注释/文档里的字样不误报。
 允许的等待：asyncio.sleep（协作式让位）、rmux 原生 wait-pane（线程池阻塞）、
 watchdog 事件（events.py）。fake_agent.py 是独立进程测试夹具（模拟延迟），不辖。
 """
@@ -28,7 +28,7 @@ def _time_sleep_calls(tree: ast.AST) -> list[int]:
 def test_no_time_sleep_in_sources():
     offenders = []
     # 豁免：monitor.py 是独立渲染进程（TUI 帧率节流）；notifyd.py 是独立
-    # 守护进程（自有 pane，2s 轮询决策目录）——都不在编排事件循环内
+    # 守护进程（自有 pane，2s 轮询决策目录）·都不在编排事件循环内
     exempt = ("__pycache__",)
     for py in sorted(SRC.rglob("*.py")):
         if any(part in py.parts for part in exempt) or py.name in (

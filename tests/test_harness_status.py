@@ -1,6 +1,6 @@
 """evo_harness status 前置校验回归（claude r1 must-fix #2）。
 
-旧实现：status 对不存在的 run-id 没有守卫——FileBus 构造副作用会 mkdir +
+旧实现：status 对不存在的 run-id 没有守卫，FileBus 构造副作用会 mkdir +
 写全新 run.json，输出伪造的 stage=IDLE status=running，轮询方永远等不到终态。
 """
 

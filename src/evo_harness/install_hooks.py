@@ -2,7 +2,7 @@
 
 安全边界：**默认只写 run 工作目录下的项目级配置**（.claude/settings.json）。
 用户全局配置（~/.codex/config.toml / ~/.kimi-code/config.toml）只在显式授权
-（`install_all(..., include_global=True)`，CLI 侧 `--global-hooks`）时才写——
+（`install_all(..., include_global=True)`，CLI 侧 `--global-hooks`）时才写，
 那是用户的地盘，动它必须 opt-in。
 
 claude hook 注册（win-rmux 实测要点）：
@@ -52,13 +52,13 @@ CODEX_HOOK_EVENTS = (
 def install_codex_hooks() -> Path:
     """codex 状态 hook（源码实证 2026-08-24，codex-rs/config/src/hook_config.rs）：
 
-    - 用户层声明在 **~/.codex/config.toml 的 [hooks.<Event>] 表**——
+    - 用户层声明在 **~/.codex/config.toml 的 [hooks.<Event>] 表**，
       `~/.codex/hooks.json` 不是用户配置加载点（仅插件源用 HooksFile）
     - handler 是 `#[serde(tag = "type")]` 枚举：条目必须含 `type = "command"`，
       超时键名 `timeout`（alias timeout_sec）
-    - 信任按 `hooks.state.<key>.trusted_hash` 记忆（HookStateToml）——
+    - 信任按 `hooks.state.<key>.trusted_hash` 记忆（HookStateToml），
       启动 flags 带 `--dangerously-bypass-hook-trust` 跳过 hash 检查
-    - codex Stop hook 实测不触发（win-rmux 沉淀）——judge 以产物为准
+    - codex Stop hook 实测不触发（win-rmux 沉淀），judge 以产物为准
     """
     import re
 
@@ -87,7 +87,7 @@ def install_codex_hooks() -> Path:
     block = ["\n# evo-harness: agent-state hook（状态回写 EVO_STATE_FILE）"]
     for ev in CODEX_HOOK_EVENTS:
         # SessionEnd 会被 codex 钳到 3s（v0.148.0 实测警告
-        # "clamping SessionEnd hook timeout to 3s"）——直接写 3 免告警
+        # "clamping SessionEnd hook timeout to 3s"）·直接写 3 免告警
         to = 3 if ev == "SessionEnd" else 10
         block += [
             f"[[hooks.{ev}]]",
@@ -124,7 +124,7 @@ def install_kimi_hooks() -> Path:
 
 def install_all(project_dir: Path, include_global: bool = False) -> dict[str, str]:
     """装状态 hook：项目级 claude 恒装；codex/kimi 全局配置仅 include_global
-    （显式授权）时写——默认绝不碰用户全局配置。"""
+    （显式授权）时写，默认绝不碰用户全局配置。"""
     installed = {"claude": str(install_claude_project_hooks(project_dir))}
     if include_global:
         installed["codex"] = str(install_codex_hooks())

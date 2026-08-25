@@ -93,10 +93,10 @@ def worker_state(hook_state_value: str | AgentState | None, seen: bool) -> Agent
 # ---------------------------------------------------- P8.1 blocked 守卫契约 ----
 
 def sendable(state: str | AgentState | None) -> bool:
-    """blocked 守卫的判定核：先查再发——只有确证 BLOCKED 才拒发。
+    """blocked 守卫的判定核：先查再发，只有确证 BLOCKED 才拒发。
 
     UNKNOWN 放行：herdr 的 agent_blocked 只在确证审批/问询框时触发；无 hook
-    信号（识别不了）时若一律拒发，无 hook 的 agent 将永远发不出去——此时由
+    信号（识别不了）时若一律拒发，无 hook 的 agent 将永远发不出去，此时由
     屏幕对话框扫描兜底。DONE 与 IDLE 等价（就绪，可接下一单）。
     """
     if isinstance(state, AgentState):
@@ -114,13 +114,13 @@ def sendable(state: str | AgentState | None) -> bool:
 # ------------------------------------------------------ P8.1 三段式发送契约 ----
 
 # bracketed-paste 包裹序列（DECSET 2004 启用的 TUI 会把包裹内容当粘贴整块
-# 处理，不做逐键解释）。仅在目标 pane 应用已开 bracketed 模式时才有意义——
+# 处理，不做逐键解释）。仅在目标 pane 应用已开 bracketed 模式时才有意义·
 # 「感知」= 发前先判模式，未开启则退化为普通 send-text。
 BRACKETED_PASTE_START = "\x1b[200~"
 BRACKETED_PASTE_END = "\x1b[201~"
 
 # Enter 的两种编码：键 token（现状 send_keys "Enter"）与 hex 编码
-# （send-keys -H 0d——逐字节下发、不被当文本回显前缀吞掉的编码 Enter）。
+# （send-keys -H 0d·逐字节下发、不被当文本回显前缀吞掉的编码 Enter）。
 ENTER_KEY = "Enter"
 ENTER_HEX = "0d"
 
@@ -155,7 +155,7 @@ def placement_enabled(env: Mapping[str, str], pane: str | None) -> bool:
 
 @runtime_checkable
 class BlockedGuard(Protocol):
-    """P8.1 blocked 先查再发——**纯契约声明（runtime 未接线，P8 后续）**。
+    """P8.1 blocked 先查再发，**纯契约声明（runtime 未接线，P8 后续）**。
 
     drive 发送 prompt 前调用：实现扫描目标 pane 的审批/问询框（屏幕对话框
     特征 + hook blocked 状态），返回 True 允许发送；False = 拒发（等价
@@ -168,7 +168,7 @@ class BlockedGuard(Protocol):
 
 @runtime_checkable
 class ThreePhaseSender(Protocol):
-    """P8.1 三段式发送——**纯契约声明（runtime 未接线，P8 后续）**。
+    """P8.1 三段式发送，**纯契约声明（runtime 未接线，P8 后续）**。
 
     一段：bracketed-paste 感知发送文本（`bracketed_wrap` + 模式判断）；
     二段：短延迟（`SUBMIT_DELAY_MS`）后编码 Enter（`ENTER_HEX`/`-H`）；
@@ -182,7 +182,7 @@ class ThreePhaseSender(Protocol):
 
 @runtime_checkable
 class MonitorPlacement(Protocol):
-    """P8.4 monitor 自动落位——**纯契约声明**（cli._place_herdr_monitor
+    """P8.4 monitor 自动落位，**纯契约声明**（cli._place_herdr_monitor
     是现行实现，未走本 Protocol 接线）。
 
     `placement_enabled` 为真时：pane split（--no-focus、--current 定位）+

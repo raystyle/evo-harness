@@ -6,7 +6,7 @@
   agent_state_hook.py < stdin JSON   # hook_event_name 事件映射
 
 通道权威是 herdr 底层的四态（idle/working/blocked/unknown）；五态里的
-`done` 是展示派生态，不落 state.json——由 monitor 依据 state=idle +
+`done` 是展示派生态，不落 state.json，由 monitor 依据 state=idle +
 同目录 worker.json 的 seen=false 派生（见 docs/harness-herdr.md P8.3）。
 直传参数 `done` 作为语法糖：state 落 idle、worker.json 标 seen=false。
 

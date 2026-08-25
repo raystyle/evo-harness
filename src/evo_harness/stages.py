@@ -64,7 +64,7 @@ class Harness:
         """并发跑一批任务（空闲派发）；单 unit 超时先重派一轮，再缺才升级。
 
         r6/r9 实证：慢 unit（长研究/长编码）撞 task_wait 一刀切，整 run 陪葬
-        ——超时是「还没干完」不是「失败」，重派给它第二窗（阶段墙钟仍兜底）。
+        ，超时是「还没干完」不是「失败」，重派给它第二窗（阶段墙钟仍兜底）。
         """
         results = await self.pool.run_tasks(tasks)
         missing = [t for t, r in results.items() if r != "done"]
@@ -200,8 +200,8 @@ class Harness:
 
     def _plan_artifacts(self, complete_marker: bool = False) -> tuple[Path, ...]:
         """planner 完成信号 = 三契约全齐（单盯第一份会在 agent 写后续契约时
-        误判 done 提前释放——r1/r4 实证）；真 agent 模式再加 COMPLETE.json
-        （merge-order 登记时落——CLI 逐条原子写使「三文件存在」仍会过早
+        误判 done 提前释放，r1/r4 实证）；真 agent 模式再加 COMPLETE.json
+        （merge-order 登记时落，CLI 逐条原子写使「三文件存在」仍会过早
         触发，r7 实证）。"""
         names = ["goal_spec.json", "plan.json", "allocations.json"]
         if complete_marker:
@@ -269,7 +269,7 @@ class Harness:
         }
         tasks, unit_ids = {}, []
         for uid, spec in targets.items():
-            # revise 重试轮必须保留上一轮 retries——每轮重建 unit.json 会把
+            # revise 重试轮必须保留上一轮 retries·每轮重建 unit.json 会把
             # 计数重置为 0，重试预算永不触发（claude r1 must-fix #1）
             prev_retries = self._unit_of(uid).retries if (
                 self.bus.unit_dir(uid) / "unit.json"
@@ -361,7 +361,7 @@ class Harness:
 
     def _sync_tool_templates(self) -> None:
         """.evotools/evo_harness → skills/evo/templates/tools/evo_harness 双拷贝
-        同步（集成门最常见的机械性失败——单元改了本体忘拷模板，r10 实证）。"""
+        同步（集成门最常见的机械性失败，单元改了本体忘拷模板，r10 实证）。"""
         import shutil
         src = self.repo_root / ".evotools" / "evo_harness"
         dst = (self.repo_root / "skills" / "evo" / "templates" / "tools"
@@ -395,14 +395,14 @@ class Harness:
                 unit_ids, plan.get("merge_order", []),
             )
             # 逐条 merged 必须全真：merge_one 冲突只返回 (False, detail) 不抛错，
-            # 不查就放行进 cleanup——git branch -D 把未合入分支删掉，静默丢工作
+            # 不查就放行进 cleanup·git branch -D 把未合入分支删掉，静默丢工作
             # （codex r1 must-fix）
             failed = [r for r in report if not r.get("merged")]
             if failed:
                 detail = "; ".join(
                     f"{r['unit_id']}: {r['detail'][:120]}" for r in failed
                 )
-                # 决策节点：merge 冲突处置交主 agent——skip-debt 跳过失败单元
+                # 决策节点：merge 冲突处置交主 agent·skip-debt 跳过失败单元
                 # 继续集成（债入事件流）/ abort 终止；fake 走 autopilot 默认
                 auto = (getattr(self.config.budget,
                                 "decision_autopilot_s", 0.0) or 5.0
@@ -426,7 +426,7 @@ class Harness:
                 unit_ids = [r["unit_id"] for r in report if r.get("merged")]
             ok, tail = await asyncio.to_thread(self.worktrees.integration_test)
             if not ok:
-                # 自修回边（r10 实证死因）：双拷贝漂移是机械问题——程序同步
+                # 自修回边（r10 实证死因）：双拷贝漂移是机械问题·程序同步
                 # 模板重跑一次；仍败才升级（此时才是真回归）
                 self.bus.log_event("repair", f"集成测试失败，尝试模板同步自修: {tail[:80]}")
                 self._sync_tool_templates()
@@ -476,7 +476,7 @@ class Harness:
             await self._stage_plan(goal)
 
             # 关键决策节点（控制模型 v2）：plan 契约过门禁后，主 agent 参与
-            # 批准决策——读 markdown 产物与契约摘要再放行，而非盲等最终产物；
+            # 批准决策·读 markdown 产物与契约摘要再放行，而非盲等最终产物；
             # 默认 approve 超时兜底，无人值守 run 不断流
             self._request_plan_approval()
             auto = (getattr(self.config.budget, "decision_autopilot_s", 0.0)
@@ -566,7 +566,7 @@ class Harness:
     def _bump_retry(self, uid: str) -> None:
         """revise 一轮：重试计数 +1 并**落盘**，超上限硬停止。
 
-        计数必须持久化——_stage_execute 每轮重建 unit.json，只改内存对象
+        计数必须持久化，_stage_execute 每轮重建 unit.json，只改内存对象
         会让预算检查永远读到 0（claude r1 must-fix #1 的死代码根因）。
         """
         unit = self._unit_of(uid)
@@ -580,7 +580,7 @@ class Harness:
 
     async def abort(self) -> None:
         """跨进程可生效的终止：先停 detached 守护进程，再杀 rmux 会话，
-        最后置终态（顺序不能反——活进程会把 aborted 覆盖回 running）。"""
+        最后置终态（顺序不能反，活进程会把 aborted 覆盖回 running）。"""
         await asyncio.to_thread(self._kill_detached_pid)
         await self.driver.kill_session()
         self.bus.set_stage("ABORTED", "aborted")
@@ -622,7 +622,7 @@ class Harness:
                 "codex": "可生产性（部署/分发/宿主接入/CI/跨平台缺口）",
             }
             round_no = 0
-            while True:  # extend 决策可动态加轮——审计 r3：range 定值使 extend 无效
+            while True:  # extend 决策可动态加轮，审计 r3：range 定值使 extend 无效
                 if round_no >= max_rounds:
                     # 决策节点（控制模型 v2）：轮次耗尽未一致，处置交主 agent
                     auto = (getattr(self.config.budget,
@@ -755,7 +755,7 @@ class Harness:
                     "# 修复任务\n\n按下列 must-fix 清单逐条修复仓库：\n"
                     f"{fl_path}\n\n"
                     "范围边界（硬约束）：**禁止修改 `.evotools/` 与 "
-                    "`skills/evo/templates/tools/` 下的编排器源码**——编排进程"
+                    "`skills/evo/templates/tools/` 下的编排器源码**，编排进程"
                     "正在运行，run 中途改动会破坏后续新进程（prod-r3 实证：结构"
                     "损伤致 review_cycle 不可调用、终态被覆盖）。涉及编排器的发现"
                     "一律降级 `[should-fix]` 写进报告，由 host 在 run 结束后处理。\n"
@@ -771,7 +771,7 @@ class Harness:
                     {f"rc-r{round_no}-fix": (fix_prompt, fix_out)},
                 )
 
-            # while True 只经决策/一致路径 return——无尾出口（审计 r3：
+            # while True 只经决策/一致路径 return·无尾出口（审计 r3：
             # 旧 for 尾兜底曾把 extend 静默退化成空终审 + DONE）
         except HardStop as exc:
             self.bus.set_stage("ESCALATE", "escalated")

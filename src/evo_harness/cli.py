@@ -152,7 +152,7 @@ def _pid_alive(pid: int) -> bool:
     """进程存活探测（跨平台）。
 
     Windows 的 os.kill(pid, 0) 不是探测是杀伤：CPython 对非
-    CTRL_C/CTRL_BREAK_EVENT 的信号一律 TerminateProcess(handle, sig)——
+    CTRL_C/CTRL_BREAK_EVENT 的信号一律 TerminateProcess(handle, sig)，
     status/monitor 扫一眼就会把 detached 守护进程杀掉（codex r2 must-fix）。
     Windows 走 OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) 只读探测。
     """
@@ -244,7 +244,7 @@ def _record_console(shared: Path, run_id: str, key: str, value: dict) -> None:
 def _herdr_live_allowed() -> bool:
     """pytest 环境拒绝真实 herdr 操作（2026-08-25 事故沉淀）。
 
-    测试 fixture 漏 patch 新集成点时，测试真调宿主 herdr——开 tab 投真
+    测试 fixture 漏 patch 新集成点时，测试真调宿主 herdr，开 tab 投真
     flow，flow 的 execute unit 又在旧代码 worktree 里跑 pytest，形成
     自繁殖（一轮事故 1600+ 杂散 tab、真 agent run 烧 70 分钟）。测试要
     走 mock 路径须显式 EVO_HERDR_TEST_FAKE=1（_mk_* 夹具设）。
@@ -261,7 +261,7 @@ def _place_herdr_monitor(run_id: str, shared: Path) -> str | None:
     ① ``pane split --current --direction right --no-focus --cwd``：右分屏
     不抢焦点，stdout JSON 的 ``result.pane.pane_id`` 即新 pane；
     ② ``pane wait-output --regex '[%$#]\\s*$'``：等 shell 提示符就绪（替代
-    herdr SKILL 建议的盲 sleep 2-3s——shell 未稳时 pane run 吞首字符）；
+    herdr SKILL 建议的盲 sleep 2-3s，shell 未稳时 pane run 吞首字符）；
     ③ ``pane run <pane_id> <解释器> -m evo_harness.cli monitor …``：用本
     进程解释器起 monitor，不依赖新 pane 的 PATH/venv。
     任一步失败仅告警不阻断 run（monitor 是辅助面，fail-open）。
@@ -297,7 +297,7 @@ def _place_herdr_monitor(run_id: str, shared: Path) -> str | None:
                 capture_output=True, text=True, timeout=15,
             )
         except subprocess.TimeoutExpired:
-            pass  # 异壳/慢启动没等到提示符——照投（SKILL：未稳吞首字符的弱化）
+            pass  # 异壳/慢启动没等到提示符，照投（SKILL：未稳吞首字符的弱化）
         mon = subprocess.run(
             [herdr, "pane", "run", pane_id]
             + [shlex.quote(t) for t in (
@@ -378,7 +378,7 @@ def _write_pidfile(shared: Path, run_id: str) -> None:
 def _spawn_flow_in_rmux_session(args, run_id: str) -> bool:
     """flow 新开 rmux 会话执行（2026-08-25 用户定调）。
 
-    rmux daemon 独立，flow 只是它的 socket 客户端——放专属后台会话
+    rmux daemon 独立，flow 只是它的 socket 客户端，放专属后台会话
     （``rmux new-session -d -s evo-<run_id>``）：不占 herdr tab、不挂
     宿主终端，herdr 关闭无碍；flow 退出会话随之自灭。命令内联
     EVO_HERDR_MONITOR_PLACED=1（防再调度）+ tee 落 harness.log。
@@ -510,7 +510,7 @@ async def _run_flow(args) -> int:
     config = HarnessConfig(shared_root=args.shared)
     config.install_global_hooks = getattr(args, "global_hooks", False)
     run_id = _resolve_run_id(args)
-    # abort 前置校验：run 目录不存在直接报错——否则 FileBus 构造会给
+    # abort 前置校验：run 目录不存在直接报错·否则 FileBus 构造会给
     # 错误的 run-id 空建一套目录（伪终态，真 run 毫发无损）
     if args.command == "abort" and not (
         Path(args.shared) / run_id / "run.json"
@@ -669,7 +669,7 @@ def main(argv: list[str] | None = None) -> int:
         return run_monitor(Path(args.shared), rid)
 
     if args.command == "status":
-        # 与 abort 同款前置校验：run.json 不存在即报错——否则 FileBus 构造会
+        # 与 abort 同款前置校验：run.json 不存在即报错·否则 FileBus 构造会
         # 给不存在的 run-id 空建目录并伪造 stage=IDLE status=running
         if not (Path(args.shared) / run_id / "run.json").exists():
             print(f"run 不存在: {Path(args.shared) / run_id}", file=sys.stderr)
@@ -696,7 +696,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # P8.4 monitor + notifyd 控制台自动落位 + flow rmux 调度：herdr 会话内
     # （HERDR_ENV=1 由 herdr 起 pane 时注入）。EVO_HERDR_MONITOR_PLACED=1
-    # 是祖先守卫——被调度进 tab 的 flow 子进程带此标记，跳过调度分支直接
+    # 是祖先守卫·被调度进 tab 的 flow 子进程带此标记，跳过调度分支直接
     # 本地执行（否则子生孙无限 fork：r5 事故 30s 200+ tab [实证: 2026-08-25]）。
     # run_id 先锚定，落位/自守护子进程/主流程三者同 id。
     if args.command in ("run", "review-cycle"):

@@ -1,6 +1,6 @@
 """异步文件事件等待（watchdog.asyncio + asyncio.Queue）：事件驱动，零阻塞轮询。
 
-编排器的 observe/wait 全部走这里——文件出现/变化触发谓词重查；
+编排器的 observe/wait 全部走这里，文件出现/变化触发谓词重查；
 queue.get 的超时仅用于预算检查与终态兜底。协作式让位用 asyncio.sleep
 （让出事件循环），阻塞式 time.sleep 在异步代码里是禁止项（lint 固化）。
 """

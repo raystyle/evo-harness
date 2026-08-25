@@ -1,4 +1,4 @@
-"""L0 运行时驱动（async/await）：librmux 封装——后台会话、四铁律 drive、事件等待。
+"""L0 运行时驱动（async/await）：librmux 封装，后台会话、四铁律 drive、事件等待。
 
 异步铁则（P7 重构 2026-08-24）：
 - librmux 是同步 subprocess SDK → 一律 `asyncio.to_thread` 包裹，不阻塞事件循环
@@ -184,7 +184,7 @@ class HarnessDriver:
     async def kill_session(self) -> None:
         """杀本 run 的 rmux session。
 
-        abort 由独立进程执行，self.session 必为 None——必须按会话名反查
+        abort 由独立进程执行，self.session 必为 None，必须按会话名反查
         再杀，否则跨进程 abort 完全不生效。无 server / 会话不存在时安静跳过。
         """
 
@@ -234,7 +234,7 @@ class HarnessDriver:
         """四铁律 + P8.1 三段式驱动提交。确认优先级：hook 状态通道 > 屏幕短头。"""
         text = " ".join(text.split())  # 铁律 5：单行化
         head = text[:10]
-        # P8.1 先查再发：对话框在场先处置——模态框会吞提交文本，也会让
+        # P8.1 先查再发：对话框在场先处置·模态框会吞提交文本，也会让
         # _ensure_input_live 的 zz 探针失真（输入被对话框截走）
         await self._sweep_dialogs(pane)
         if tui and not await self._ensure_input_live(pane):
@@ -275,7 +275,7 @@ class HarnessDriver:
         """探针确认输入通道已被 TUI 接管（并发多实例窗口可达 2-3 分钟）。
 
         检测用原生 `wait-pane --next-text zz`：TUI 读取输入才会**回显**到
-        输出流——屏幕子串匹配会被折行骗过（❯ 与文本分行，实测堆积 80 个 z
+        输出流，屏幕子串匹配会被折行骗过（❯ 与文本分行，实测堆积 80 个 z
         也不命中）。活后批量退格清探针（预活探针被 TUI 丢弃，无残留）。
         """
         loop = asyncio.get_running_loop()
@@ -297,7 +297,7 @@ class HarnessDriver:
             if l.strip().startswith(("›", "❯"))
         ]
         if not input_lines:
-            return False  # 找不到输入行（备屏/滚动）——保守视为无残留
+            return False  # 找不到输入行（备屏/滚动），保守视为无残留
         return any(text in l for l in input_lines[-2:])
 
     async def _prompt_residual(self, pane: Pane, text: str) -> bool:
@@ -343,7 +343,7 @@ class HarnessDriver:
 
         替代 r10 前主路的「发了再修」（drive 失败后才 resolve_dialogs，
         提交文本已被模态框吞掉）。marker 文本本身即对话框身份、键序随
-        marker 走——与 pane 里是哪个 agent 无关，故扫并集而非按 agent 过滤。
+        marker 走，与 pane 里是哪个 agent 无关，故扫并集而非按 agent 过滤。
         """
         from .config import DIALOGS
 
@@ -363,7 +363,7 @@ class HarnessDriver:
         """三段式①：bracketed-paste 感知文本注入（rmux 原生 buffer 路）。
 
         load-buffer 载入 → paste-buffer -p：daemon 仅当目标 pane 已启用
-        bracketed 模式才包 \\x1b[200~…\\x1b[201~（感知式包壳——发送侧自包壳
+        bracketed 模式才包 \\x1b[200~…\\x1b[201~（感知式包壳，发送侧自包壳
         会双重包裹，r10 研究 C3 冲突裁决）。payload 剥裸 ESC（orca 实证：
         防控制序列注入）。librmux cmd 不支持 stdin → load-buffer 走文件参数。
         """
@@ -395,7 +395,7 @@ class HarnessDriver:
             Path(path).unlink(missing_ok=True)
 
     async def _send_enter(self, pane: Pane) -> bool:
-        """三段式③：编码 Enter——send-keys -H 0d（hex 字节，非键名 token）。
+        """三段式③：编码 Enter，send-keys -H 0d（hex 字节，非键名 token）。
 
         herdr 同义（Enter 按协商协议编码而非固定键名）；老 daemon 无 -H
         时退 pane.send_keys("Enter")，保底可用。

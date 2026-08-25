@@ -25,12 +25,12 @@ from .filebus import goal_brief
 SPIN = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 
 # 赛博朋克霓虹板（真彩 hex；终端不支持时 rich 自动降级 ANSI16）
-NEON_CYAN = "#00ffff"      # 主电网青 —— 流程/结构/系统域（GRAPH、AGENTS、派发）
-NEON_MAGENTA = "#ff00ff"   # 主霓虹品红 —— 唤醒域主色（NOTIFY 面板 + ⚖/✉ 事件）
+NEON_CYAN = "#00ffff"      # 主电网青 ， 流程/结构/系统域（GRAPH、AGENTS、派发）
+NEON_MAGENTA = "#ff00ff"   # 主霓虹品红 ， 唤醒域主色（NOTIFY 面板 + ⚖/✉ 事件）
 NEON_PINK = "#ff2d95"      # 热粉
-NEON_YELLOW = "#ffd300"    # 高压钠黄 —— AGENTS 面板主色 + 注意/在途语义
+NEON_YELLOW = "#ffd300"    # 高压钠黄 ， AGENTS 面板主色 + 注意/在途语义
 NEON_GREEN = "#00ff87"     # 荧光绿
-NEON_VIOLET = "#875fff"    # 紫电 —— GOAL 专属身份色（全屏唯一）
+NEON_VIOLET = "#875fff"    # 紫电 ， GOAL 专属身份色（全屏唯一）
 DIM_GRID = "#5f5f87"       # 暗紫网格（结构线）
 
 KIND_STYLE = {
@@ -188,7 +188,7 @@ def _log_usable(th: int, units: bool, notify_rows: int) -> int:
 
 def _units_panel(root: Path) -> Panel | None:
     """执行单元清单（console.json，落位时记录）：哪个单元、哪个平面、
-    哪个 pane——rmux 控制平面 / herdr 操作平面 / 无头，一眼分明。"""
+    哪个 pane，rmux 控制平面 / herdr 操作平面 / 无头，一眼分明。"""
     inv = _rj(root / "console.json")
     if not inv:
         return None
@@ -229,7 +229,7 @@ def _units_panel(root: Path) -> Panel | None:
 
 
 def _notify_panel(root: Path, spin: str) -> Panel:
-    """值守状态 + 决策节点全景（用户定调：一切状态都要可视化；icon 素化——
+    """值守状态 + 决策节点全景（用户定调：一切状态都要可视化；icon 素化，
     沿用全局既有标记 ⚖ 决策 / ✓ 成 / ✗ 败，值守行靠颜色+spinner 表身份，
     排版对齐 GOAL 面板：行内居中、段间 · 分隔）。"""
     state, dm = _daemon_state(root)
@@ -667,7 +667,7 @@ def build(root: Path, tick: int) -> Layout:
 
 def _await_run_json(root: Path, wait_s: float = 60.0) -> bool:
     """控制台落位竞态宽限（accept-notifyd-r1 实证）：落位发生在 main()
-    进 flow 之前，run.json 由 _prepare 稍后才写——「无 run 即退」会让
+    进 flow 之前，run.json 由 _prepare 稍后才写，「无 run 即退」会让
     monitor 在起跑线上死掉。等到文件出现或宽限耗尽。"""
     import time as _t
 

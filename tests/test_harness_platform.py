@@ -73,14 +73,14 @@ def test_agent_in_pane_fallback_without_proc(tmp_path):
 
 
 def test_hook_command_uses_current_interpreter():
-    """Windows 标准安装通常没有 python3——hook 命令必须用 sys.executable。"""
+    """Windows 标准安装通常没有 python3，hook 命令必须用 sys.executable。"""
     cmd = hook_command()
     assert cmd.startswith(f'"{sys.executable}"')
     assert not cmd.startswith("python3")  # 不依赖 PATH 里的 python3 存在
 
 
 def test_pid_alive_posix():
-    """POSIX：kill(pid, 0) 探测——活进程 True，死 pid False。"""
+    """POSIX：kill(pid, 0) 探测，活进程 True，死 pid False。"""
     from evo_harness.cli import _pid_alive
 
     assert _pid_alive(os.getpid()) is True
@@ -89,7 +89,7 @@ def test_pid_alive_posix():
 
 def test_pid_alive_windows_branch_never_kills(monkeypatch):
     """Windows 分支（codex r2 must-fix）：os.kill(pid, 0) 在 Windows 上是
-    TerminateProcess 杀伤调用——分支必须走 OpenProcess，且绝不调 os.kill。"""
+    TerminateProcess 杀伤调用，分支必须走 OpenProcess，且绝不调 os.kill。"""
     import ctypes
 
     from evo_harness.cli import _pid_alive

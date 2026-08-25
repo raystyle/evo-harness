@@ -44,7 +44,7 @@ DEFAULT_AGENTS: dict[str, AgentSpec] = {
         name="claude",
         cmd="claude",
         args=(
-            # 预接受旗标（2.1.238+）：跳过 bypass 模式的启动安全确认框——
+            # 预接受旗标（2.1.238+）：跳过 bypass 模式的启动安全确认框·
             # r3 实证该框默认选中 1. No, exit，会吞掉一切提交文本
             "--allow-dangerously-skip-permissions",
             "--dangerously-skip-permissions",
@@ -79,7 +79,7 @@ class Budget:
     #                                       # 路径 hook 失明，三路全都探测不到）
     nudge_rounds: int = 2               # 催写轮数
     # 决策节点（控制模型 v2）：真 agent run 无限期等主 agent decide（无人来
-    # 也不默认放行——批准是责任不是形式）；fake/E2E 模式自动放行走默认
+    # 也不默认放行·批准是责任不是形式）；fake/E2E 模式自动放行走默认
     decision_autopilot_s: float = 0.0    # 0=等人；>0=fake 超时自动默认
     decision_notify_cmd: str = ""        # 请求决策时的 shell 回调（env 注入
     #                                    # EVO_RUN/EVO_NODE/EVO_BRIEF/EVO_CHOICES）
@@ -130,7 +130,7 @@ class HarnessConfig:
     fake_agent_script: Path | None = None
     launch_settle_seconds: float = 45.0 # agent TUI 欢迎屏渲染等待（多实例并发
     #                                    # 下第 4+ 个 pane 明显变慢，8s 实测不够）
-    # fan-out 轮转序：同阶段多 unit 依次分配不同 agent——跨模型并行才有多样性
+    # fan-out 轮转序：同阶段多 unit 依次分配不同 agent·跨模型并行才有多样性
     # （同模型并行共享盲区；win-rmux review-cycle 的三方一致同理）
     fanout_agents: tuple[str, ...] = ("claude", "kimi", "codex")
     # 全局 hook 安装（写 ~/.codex/config.toml 与 ~/.kimi-code/config.toml）默认关：

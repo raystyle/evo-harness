@@ -1,7 +1,7 @@
 # evo-harness
 
 六阶段 Graph-of-Loops 编排器：用 rmux 后台会话把 **codex / kimi / claude** 装进同一
-执行体系，按阶段图推进——模型只填角色模板，控制权在代码。
+执行体系，按阶段图推进，模型只填角色模板，控制权在代码。
 
 ```
 explore → research → plan → execute ⇄ review → merge → DONE
@@ -42,7 +42,7 @@ evo-harness status / wait / abort / decide / contract / clean-wt
 开发仓内亦可 `uv sync` 后 `uv run evo-harness …`（同入口）。
 
 herdr 会话内（`HERDR_ENV=1`）起 run：自动落位 monitor 右窗格 + 无头 notifyd +
-flow 专属 rmux 会话，CLI 单行交接即退——决策（※）/终态（✔）由 notifyd 恰在
+flow 专属 rmux 会话，CLI 单行交接即退，决策（※）/终态（✔）由 notifyd 恰在
 主 agent idle 时注入，零阻塞零后台 shell。
 
 ## 控制模型
@@ -51,7 +51,7 @@ flow 专属 rmux 会话，CLI 单行交接即退——决策（※）/终态（�
   门禁 → 自愈（三路：submit-stale / worker-silent / idle-nudge）
 - **模型产物只有 markdown**；控制面 JSON 一律程序生成（`evo-harness contract`）
 - **主 agent 决策节点**：plan-approval / escalate-review / merge-conflict /
-  merge-approval——真 run 无限期等人，唤醒走 notifyd 注入
+  merge-approval，真 run 无限期等人，唤醒走 notifyd 注入
 
 产物全在 `.evo_tasks/<run_id>/`（gitignore）。
 

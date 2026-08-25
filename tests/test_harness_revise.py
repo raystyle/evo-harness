@@ -1,7 +1,7 @@
 """evo_harness revise 重试预算回归（claude r1 must-fix #1）。
 
 旧实现：_stage_execute 每轮用全新 ExecutionUnit（retries=0）覆写 unit.json，
-retries += 1 只发生在内存对象上——check_unit_retry 恒真，BUDGET_EXCEEDED
+retries += 1 只发生在内存对象上，check_unit_retry 恒真，BUDGET_EXCEEDED
 永不触发，LOCAL_FAIL 死循环只靠全局墙钟兜底。
 """
 
@@ -91,7 +91,7 @@ def test_merge_gate_blocks_on_failed_unit_merge(tmp_path, monkeypatch):
 
     monkeypatch.setattr(h, "worktrees", _FakeWorktrees())
 
-    # 控制模型 v2：真模式 merge 冲突先问主 agent（无限期等人）——测试注入
+    # 控制模型 v2：真模式 merge 冲突先问主 agent（无限期等人）·测试注入
     # 决策「abort」走硬停止分支（skip-debt 分支由 fake E2E 覆盖）
     async def _decide_abort(node, timeout_s):
         return "abort"
@@ -174,7 +174,7 @@ def test_escalate_review_extend_runs_extra_round(tmp_path, monkeypatch):
 
 
 async def _approve_then_merge(h):
-    """批准后由 run 流负责调 _stage_merge——这里只验证批准不抛。"""
+    """批准后由 run 流负责调 _stage_merge，这里只验证批准不抛。"""
     await h._gate_merge_approval([UID])
 
 

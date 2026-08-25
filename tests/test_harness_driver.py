@@ -3,7 +3,7 @@
 r10 研究收敛（research-synth §五）：① paste-buffer -p（daemon 按 pane 模式
 感知包壳，发送侧不自包壳防双重包裹）→ ② 原生静默同步 → ③ send-keys -H 0d
 （hex 编码 Enter）。对话框在发送前按全 agent marker 并集扫（先查再发，
-替代「发了再修」）。全部 fake——不起真 rmux。
+替代「发了再修」）。全部 fake，不起真 rmux。
 """
 
 import asyncio

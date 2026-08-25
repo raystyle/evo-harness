@@ -1,7 +1,7 @@
 """evo_harness states 契约回归：五态类型 + blocked 守卫 / 三段式 / 落位 API。
 
 P8 iface-contracts：把四个实现单元（p81-driver/p82-pool-states/
-p83-hook-display/p84-placement）共同依赖的接口面钉死——值、映射、判定、
+p83-hook-display/p84-placement）共同依赖的接口面钉死，值、映射、判定、
 常量与 Protocol 形状。契约在此全绿，实现单元按此接线。
 """
 

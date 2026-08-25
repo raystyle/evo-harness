@@ -1,6 +1,6 @@
 """notifyd 决策唤醒守护回归（herdr 操作平面信使）。
 
-架构：控制平面 rmux / 操作平面 herdr。守护语义——决策请求 pending →
+架构：控制平面 rmux / 操作平面 herdr。守护语义，决策请求 pending →
 herdr agent wait <主窗格> --until idle（idle 门）→ agent prompt 注入
 决策简报（携 decide 命令）；重发按 spacing 节流、失败 30s 短退避；
 run 终态通知一次即退。全部 fake（mock HerdrClient / subprocess），零真注入。
@@ -181,7 +181,7 @@ def test_tick_decided_node_forgotten_then_new_request_fires(tmp_path):
 
 def test_tick_wait_timeout_but_content_idle_falls_back(tmp_path):
     """内容复核权威兜底（accept-notifyd-r6 实证）：状态通道失明、wait 每
-    600s 超时，但末屏无忙碌特征——照样投，决策不再干等。"""
+    600s 超时，但末屏无忙碌特征，照样投，决策不再干等。"""
     led = NotifyLedger(tmp_path / "r1" / "notify_state.json")
     c = FakeClient(wait_ok=False, tail="❯\n  ⏵⏵ bypass permissions on")
     _, calls = _tick(tmp_path, c, led, now=1000.0, pending={"plan-approval": "x"})
@@ -199,7 +199,7 @@ def test_tick_wait_timeout_and_content_busy_skips(tmp_path):
 
 
 def test_tick_no_content_trusts_wait_gate(tmp_path):
-    """读不到屏（复核失效）：退回 herdr idle 门——wait 超时即 skip。"""
+    """读不到屏（复核失效）：退回 herdr idle 门，wait 超时即 skip。"""
     led = NotifyLedger(tmp_path / "r1" / "notify_state.json")
     c = FakeClient(wait_ok=False, tail=None)
     _, calls = _tick(tmp_path, c, led, now=1000.0, pending={"plan-approval": "x"})
@@ -217,7 +217,7 @@ def test_tick_prompt_fail_marked_backoff(tmp_path):
 
 
 def test_tick_busy_tail_skips_without_ledger(tmp_path):
-    """双锁第二道：herdr 说 idle 但末屏有 spinner/计时——不投、不记账
+    """双锁第二道：herdr 说 idle 但末屏有 spinner/计时，不投、不记账
     （瞬时态，下一拍重查，不吃 30s 退避）。[实证: 2026-08-25 实拍特征]"""
     led = NotifyLedger(tmp_path / "r1" / "notify_state.json")
     busy = "✻ 写 notifyd 测试… (10m 2s · ↓ 43.5k tokens)\n❯\n  ⏵⏵ bypass permissions on"
@@ -275,7 +275,7 @@ def test_run_notifyd_missing_run(tmp_path, capsys):
 
 def test_run_notifyd_grace_waits_for_run_json(tmp_path):
     """落位竞态（accept-notifyd-r1 实证）：落位先于 flow，run.json 由
-    _prepare 稍后才写——守护须宽限等待而非即退。"""
+    _prepare 稍后才写，守护须宽限等待而非即退。"""
     run_dir = tmp_path / "r1"
     run_dir.mkdir(parents=True)
 
@@ -582,7 +582,7 @@ def test_run_notifyd_startup_event_and_beat(tmp_path):
 # -------------------------------------------- host 清债回归（rc-r2/r3） ----
 
 def test_heartbeat_fresh_during_blocking_wait(tmp_path):
-    """心跳独立线程：_deliver 长阻塞（idle 等待）期间 beat 仍刷新——
+    """心跳独立线程：_deliver 长阻塞（idle 等待）期间 beat 仍刷新，
     monitor 不再误报失联（rc-r2/r3 三方 must-fix）。"""
     _mk_run(tmp_path, pending={"plan-approval": "x"})  # running + 待决策
 
@@ -707,7 +707,7 @@ def test_write_pidfile(tmp_path):
 
 
 def test_main_herdr_mode_handover_exits_clean(console, monkeypatch, capsys):
-    """herdr 会话：CLI 纯 rmux 操作——flow 调度成功即单行交接退出，
+    """herdr 会话：CLI 纯 rmux 操作，flow 调度成功即单行交接退出，
     _run_flow 绝不在本地跑。"""
     from evo_harness import cli
     monkeypatch.setenv("HERDR_ENV", "1")
@@ -723,7 +723,7 @@ def test_main_herdr_mode_handover_exits_clean(console, monkeypatch, capsys):
 
 def test_pytest_guard_blocks_real_herdr(monkeypatch, tmp_path):
     """事故回归（2026-08-25）：PYTEST_CURRENT_TEST 环境下无 EVO_HERDR_TEST_FAKE
-    即拒绝真实 herdr 操作——fixture 漏 patch 也不许打到宿主（1600+ 杂散
+    即拒绝真实 herdr 操作，fixture 漏 patch 也不许打到宿主（1600+ 杂散
     tab + 真 agent run 自繁殖事故的编程护栏）。"""
     from evo_harness import cli
     import types
@@ -809,7 +809,7 @@ def test_main_places_console_monitor_and_spawns_notifyd(console, monkeypatch):
 
 def test_main_placed_child_runs_flow_locally(console, monkeypatch):
     """r5 fork 事故回归：调度进 tab 的 flow 子进程（EVO_HERDR_MONITOR_PLACED=1）
-    不得再走调度分支——否则子生孙无限 fork（30s 200+ tab）。"""
+    不得再走调度分支，否则子生孙无限 fork（30s 200+ tab）。"""
     from evo_harness import cli
     flows, ran = [], []
 

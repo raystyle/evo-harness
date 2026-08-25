@@ -149,7 +149,7 @@ def test_fake_e2e_merge_self_repair_syncs_templates_and_cleans(tmp_path):
 
 
 def test_fake_e2e_merge_self_repair_still_hardstops_when_repair_fails(tmp_path):
-    """自修重跑仍败才升级 HardStop——证明回边只给机械漂移一次机会。"""
+    """自修重跑仍败才升级 HardStop，证明回边只给机械漂移一次机会。"""
     repo = _repo(tmp_path)
     _install_twin_copies(repo)
     _run(repo, "add", "-A")

@@ -2,7 +2,7 @@
 
 资源模型（P7 定稿）：
 - run 启动时**一次性**拉起固定池（claude/kimi/codex 各一 pane，含
-  预信任/hook/就绪/对话框处置）——此后零 spawn，争锁窗口只发生一次
+  预信任/hook/就绪/对话框处置），此后零 spawn，争锁窗口只发生一次
 - 所有阶段产物任务进队列；**谁空闲谁领下一个任务**（idle 派发）
 - 任务完成 = 产物文件出现（权威）；hook 状态通道用于 worker 空闲确认
   （Stop→idle）与 status 展示
@@ -113,7 +113,7 @@ class WorkerPool:
 
         提示词走文件（P7 定稿）：完整 prompt（角色模板+任务+输出契约，多行
         无碍）写入 shared/<run>/tasks/<task_id>.md，drive 只发一句短的
-        「读取任务文件并执行」——send-keys 长度/转义/折形问题一劳永逸。
+        「读取任务文件并执行」，send-keys 长度/转义/折形问题一劳永逸。
         fake worker 收 "FILE <path>" 行，从文件读 FAKE 指令。
         """
         from .statemachine import HardStop
@@ -226,7 +226,7 @@ class WorkerPool:
 
         def _guard(_) -> None:
             # 硬停止护栏接线（claude r1 #3）：无进展指纹 + 阶段墙钟。
-            # worker 正在干活（hook 态 working）时清零无进展——产物静止
+            # worker 正在干活（hook 态 working）时清零无进展·产物静止
             # 是长任务常态（prod-r2 实证：fixer 干 17 分钟被误计 17 轮）
             if self.sm is not None:
                 if self._read_state(w) == "working":
@@ -241,7 +241,7 @@ class WorkerPool:
             else (artifact.parent if artifact.parent.exists()
                   else artifact.parents[-2])
         )
-        # 30s 切片轮询（r5 实证：900s 一档的轮边界太钝——worker 已 idle 且
+        # 30s 切片轮询（r5 实证：900s 一档的轮边界太钝·worker 已 idle 且
         # 产物缺，本可立即催写，却要干等下一个轮边界才被看见）
         deadline = time.monotonic() + wait_s
         nudges_left = nudge_rounds
@@ -261,7 +261,7 @@ class WorkerPool:
             now = time.monotonic()
             if now >= deadline:
                 return False
-            # 自愈 1（P8.2 stalled v1）：提交死会话——userpromptsubmit 后零后续
+            # 自愈 1（P8.2 stalled v1）：提交死会话·userpromptsubmit 后零后续
             # hook 事件（没调过任何工具）超阈值 = 会话没起来（k3 config.invalid
             # 实证：卡 15 分钟 nudge 永远被 working 态挡住）→ 重提任务行
             if (reader and nudges_left > 0 and self._submit_stale(w)
@@ -279,7 +279,7 @@ class WorkerPool:
                 )
                 round_no += 1
                 continue
-            # 自愈 1.5（r6 死态）：hook 通道整体静默——重提任务行（会进
+            # 自愈 1.5（r6 死态）：hook 通道整体静默·重提任务行（会进
             # 消息队列，agent 收尾后 drain 处理；幂等前缀可去重）
             if (reader and nudges_left > 0 and self._worker_silent(w)
                     and now - last_nudge >= 60.0):
@@ -296,7 +296,7 @@ class WorkerPool:
                     state_file=w.state_file if w.agent != "fake" else None,
                 )
                 continue
-            # 自愈 2：催写——worker 已 idle（真做完没写/幻写）且距上次催 ≥60s
+            # 自愈 2：催写·worker 已 idle（真做完没写/幻写）且距上次催 ≥60s
             # 即催，不等轮边界；催满 nudge_rounds 次后只能等超时
             state = self._read_state(w)
             if state not in ("idle", None) or nudges_left <= 0:
@@ -384,7 +384,7 @@ class WorkerPool:
 
     def _worker_silent(self, w: Worker) -> bool:
         """hook 通道整体静默：state.json 超阈值无任何新事件（r6 实证第三种
-        死态——state 卡 working、Stop 未触发、消息队列路径 hook 失明，
+        死态，state 卡 working、Stop 未触发、消息队列路径 hook 失明，
         idle 催写与 userpromptsubmit 重提两路都探测不到）。"""
         if not w.state_file or not w.state_file.exists():
             return False
@@ -397,7 +397,7 @@ class WorkerPool:
     def _submit_stale(self, w: Worker) -> bool:
         """提交死会话判定：最后一个 hook 事件是 userpromptsubmit 且超阈值。
 
-        活跃会话在思考时同样无 PreToolUse——但超过 stalled 秒（默认 120s）
+        活跃会话在思考时同样无 PreToolUse，但超过 stalled 秒（默认 120s）
         仍零工具调用，大概率是会话创建失败（模型配置/登录态问题）。
         宁可重提一次（幂等：任务行带 [task-id] 前缀，agent 侧可去重），
         不可静默烧完整个 task_wait（p8-herdr-r1 实证损失 15 分钟）。

@@ -1,4 +1,4 @@
-"""evo_harness 预信任（pretrust）回归——隔离 HOME，不碰真实信任存储。"""
+"""evo_harness 预信任（pretrust）回归，隔离 HOME，不碰真实信任存储。"""
 
 import hashlib
 import json

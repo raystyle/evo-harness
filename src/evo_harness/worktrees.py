@@ -80,7 +80,7 @@ class WorktreeRegistry:
         """把 unit 分支合回主仓当前分支。返回 (成功, 输出/冲突说明)。
 
         CHANGELOG-only 冲突自动解（p8-close-r1 实证）：并行单元都往
-        [Unreleased] 追加，内容冲突但语义同向——每块两边都保留（追加共存），
+        [Unreleased] 追加，内容冲突但语义同向，每块两边都保留（追加共存），
         程序化替代手工解；其它文件冲突照旧 abort 报告。
         """
         data = self._load()
