@@ -76,7 +76,7 @@ def _fmt_event(kind: str, detail: str) -> tuple[str, str]:
     if kind == "pool":
         m = _re.search(r"(\d+) worker.*?(\d+)s", detail)
         if m:
-            return "≡", f"常驻池 {m.group(1)} worker 就绪 ({m.group(2)}s) ── claude·kimi·codex"
+            return "≡", f"常驻池 {m.group(1)} worker 就绪 ({m.group(2)}s)"
         return "≡", detail
     if kind == "enter_stage":
         descs = {"review": "三端并行复核", "execute": "修复 must-fix", "merge": "终审整合",
@@ -517,10 +517,13 @@ def build(root: Path, tick: int) -> Layout:
             card.add_row(Text(f"  ×{n}", style="dim"))
             entries.append(Panel(card, border_style=border,
                                  box=box.ROUNDED, padding=(0, 1)))
-    while len(entries) < 3:
-        entries.append(Text(""))
+    # 卡格随池伸缩：≤3 端三列，四端一列四卡（面板高度按单行设计）
     if entries:
-        cards.add_row(*entries[:3])
+        per_row = 4 if len(entries) > 3 else 3
+        while len(entries) % per_row:
+            entries.append(Text(""))
+        for i in range(0, len(entries), per_row):
+            cards.add_row(*entries[i:i + per_row])
     if units:
         layout["units"].update(units)
     if show_notify:

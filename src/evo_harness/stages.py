@@ -810,13 +810,15 @@ class Harness:
         self.sm.enter("merge")  # 终审归入 merge 节点
         out = self.bus.task_out("rc-final", "verdict.md")
         reports = []
-        for agent in ("claude", "kimi", "codex"):
+        for agent in getattr(self.config, "fanout_agents",
+                             ("claude", "kimi", "codex")):
             p = self.bus.task_out(f"rc-r{rounds}-{agent}", "report.md")
             if p.exists():
                 reports.append(p.read_text(encoding="utf-8", errors="replace"))
+        n_sides = len(reports) or 3
         out.write_text(
             f"# 生产就绪终审（{rounds} 轮，"
-            f"{'三方一致 AGREE' if consensus else '未达一致'}）\n\n目标：{goal}\n\n"
+            f"{'一致 AGREE' if consensus else '未达一致'}）\n\n目标：{goal}\n\n"
             + "\n\n---\n\n".join(reports),
             encoding="utf-8",
         )

@@ -143,7 +143,9 @@ class HarnessConfig:
     #                                    # 下第 4+ 个 pane 明显变慢，8s 实测不够）
     # fan-out 轮转序：同阶段多 unit 依次分配不同 agent·跨模型并行才有多样性
     # （同模型并行共享盲区；win-rmux review-cycle 的三方一致同理）
-    fanout_agents: tuple[str, ...] = ("claude", "kimi", "codex")
+    fanout_agents: tuple[str, ...] = ("claude", "kimi", "codex", "grok")
+    #                                    # grok 第四端（1.0.5 接入 2026-08-25）：四路
+    #                                    # 多模型并行，安全与健壮性维度
     # 全局 hook 安装（写 ~/.codex/config.toml 与 ~/.kimi-code/config.toml）默认关：
     # 动用户全局配置必须显式授权（--global-hooks）；默认只装项目级 claude hook
     install_global_hooks: bool = False
