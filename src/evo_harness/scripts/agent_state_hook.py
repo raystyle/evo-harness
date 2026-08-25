@@ -98,7 +98,11 @@ def main() -> int:
             payload = json.loads(sys.stdin.read() or "{}")
         except json.JSONDecodeError:
             return 0
-        event = str(payload.get("hook_event_name", "")).lower()
+        # 键值双形态归一（grok 1.0.5 docs/user-guide 10-hooks.md 实证）：
+        # claude = hook_event_name:"UserPromptSubmit"（snake 键 + Pascal 值）
+        # grok   = hookEventName:"user_prompt_use" 之类（camel 键 + snake 值）
+        raw = payload.get("hook_event_name") or payload.get("hookEventName") or ""
+        event = str(raw).replace("_", "").lower()
     force_unseen = event == "done"
     state = "idle" if force_unseen else STATE_MAP.get(event, "unknown")
     _write_state(Path(state_file), state, event, force_unseen=force_unseen)

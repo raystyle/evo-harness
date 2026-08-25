@@ -47,7 +47,15 @@ DEFAULT_AGENTS: dict[str, AgentSpec] = {
     # - ready 留空走驱动默认提示符标记（❯/›/>）
     "grok": AgentSpec(
         name="grok", cmd="grok",
-        args=("--always-approve", "--trust"),
+        args=(
+            "--always-approve",
+            "--trust",
+            # 全屏 TUI：宿主 config 的 screen_mode="minimal" 会让 grok 渲染
+            # 成 1 行内联态（grok-debut-r2 实证：2 行 pane 里指针消息进不了
+            # 输入框、屏上一行 m◆ session_start 干坐）——driver 的 TUI 驱动
+            # 路径按全屏 alt-screen 设计，与 claude/kimi/codex 同构
+            "--fullscreen",
+        ),
         ready_text="",
     ),
     "claude": AgentSpec(
