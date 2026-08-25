@@ -303,3 +303,38 @@ def test_submit_stale_respects_nudge_budget(tmp_path):
     assert ok is False
     # 重提次数 ≤ nudge_rounds（预算 2）：不许无限
     assert len(drv.sent) <= 2, f"重提 {len(drv.sent)} 次超出预算"
+
+
+
+def test_idle_nudge_requires_positive_idle_signal(tmp_path):
+    """accept-v04-r1 实证回归：state 文件缺失（hook 盲，codex 默认形态）
+    不得被当 idle 触发催写（旧判 `not in ("idle", None)` 30s 级狂催）；
+    hook 盲归静默判定（120/420s）管，本测试阈值压 0 也不许走 nudge。"""
+    pool, w, drv = _mk_pool(tmp_path, "userpromptsubmit", 10)
+    w.state_file.unlink()  # hook 盲：state 文件不存在
+    artifact = tmp_path / "out" / "result.json"
+    artifact.parent.mkdir()
+    events = []
+    pool.bus.log_event = staticmethod(
+        lambda kind, detail="": events.append(kind))
+    pool.sm = type("B2", (), {"budget": type(
+        "B3", (), {"task_wait_seconds": 0.3})()})()  # 压窗：0.3s 出结果
+
+    async def go():
+        import evo_harness.events as ev
+
+        async def fast_wait(self, pred, timeout, on_wake=None):
+            return None  # 产物永不出现，快速推进轮次
+
+        ev.AsyncFileWatcher.wait_until = fast_wait
+        try:
+            pool._stalled_s = lambda: 1e9   # 静默/停滞判定都不到期
+            pool._silent_s = lambda: 1e9
+            return await pool._wait_artifact(w, "t1", artifact,
+                                             nudge_rounds=2)
+        finally:
+            import importlib
+            importlib.reload(ev)
+
+    assert asyncio.run(go()) is False
+    assert "nudge" not in events  # 缺失态不催

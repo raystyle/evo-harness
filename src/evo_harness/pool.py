@@ -297,9 +297,11 @@ class WorkerPool:
                 )
                 continue
             # 自愈 2：催写·worker 已 idle（真做完没写/幻写）且距上次催 ≥60s
-            # 即催，不等轮边界；催满 nudge_rounds 次后只能等超时
+            # 即催，不等轮边界；催满 nudge_rounds 次后只能等超时。
+            # 只认正向 idle 信号（accept-v04-r1 实证：None=hook 盲也被当
+            # idle，30s 级狂催；hook 盲者归静默判定 120/420s 管）
             state = self._read_state(w)
-            if state not in ("idle", None) or nudges_left <= 0:
+            if state != "idle" or nudges_left <= 0:
                 continue
             if now - last_nudge < 60.0:
                 continue
