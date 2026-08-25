@@ -27,9 +27,12 @@ herdr 会话内实拍：左窗格主 agent（决策者），右窗格 monitor �
 
 - **启动预检**：`run/review-cycle` 起跑前检查 Python 依赖与 rmux 二进制，
   缺失即警告退出（exit 3），不带病起跑。
-- **hook 自包含**：安装时把 `evo_agent_state_hook.py` 落进各 agent 配置
-  目录（`.claude/`、`~/.codex/`、`~/.kimi-code/`），命令引用落点副本；
-  工具升级/重装/迁移不再断链，内容比对幂等（升级自动刷新）。
+- **hook 统一一个 py**：全局唯一落点 `~/.evo-harness/evo_agent_state_hook.py`，
+  四端（claude/codex/kimi/grok）统一注册到各自用户配置目录（`~/.claude/`、
+  `~/.codex/`、`~/.kimi-code/`、`~/.grok/`）并同指中央单点；升级/重装/迁移
+  不断链，版本只看一处。
+- **绝不破坏原有 hook**：注册只增不删（同事件追加、按脚本名去重，用户
+  既有条目与其它配置键原样保留），动前备份；目标文件解析失败拒写退出。
 
 ## 前提（运行时三依赖）
 

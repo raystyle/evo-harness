@@ -140,8 +140,11 @@ def test_fake_agent_writes_lifecycle_state(tmp_path):
     assert worker["seen"] is False
 
 
-def test_install_hooks_schema_and_idempotent(tmp_path):
-    p1 = install_claude_project_hooks(tmp_path)
+def test_install_hooks_schema_and_idempotent(tmp_path, monkeypatch):
+    # 用户级安装（2026-08-25 定调）：home 打到 tmp，真 ~/.claude 不动
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    p1 = install_claude_project_hooks()
+    assert p1 == tmp_path / ".claude" / "settings.json"
     data = json.loads(p1.read_text(encoding="utf-8"))
     entry = data["hooks"]["UserPromptSubmit"][0]
     assert entry["matcher"] == "*"
@@ -152,11 +155,37 @@ def test_install_hooks_schema_and_idempotent(tmp_path):
     assert hook["command"].startswith(f'"{sys.executable}"')
     n_events = len(data["hooks"])
 
-    install_claude_project_hooks(tmp_path)  # 再装一次
+    install_claude_project_hooks()  # 再装一次
     data2 = json.loads(p1.read_text(encoding="utf-8"))
     assert len(data2["hooks"]["UserPromptSubmit"]) == 1  # 幂等：不重复
     assert len(data2["hooks"]) == n_events
-    assert (tmp_path / ".claude" / "settings.json.bak").exists()  # 备份
+    assert (tmp_path / ".claude" / "settings.json.evobak").exists()  # 首份备份
+    # 中央单点：命令指向 ~/.evo-harness/
+    assert ".evo-harness" in data2["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+
+
+def test_user_hooks_preserved_and_corrupt_refused(tmp_path, monkeypatch):
+    """用户定调：绝不破坏原有 hook。既有条目/配置键只增不删；解析失败拒写。"""
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    sd = tmp_path / ".claude"
+    sd.mkdir(parents=True)
+    mine = {
+        "env": {"FOO": "1"},
+        "hooks": {"Stop": [{"matcher": "*", "hooks": [
+            {"type": "command", "command": "echo user-own-hook"}]}]},
+    }
+    (sd / "settings.json").write_text(json.dumps(mine), encoding="utf-8")
+    install_claude_project_hooks()
+    data = json.loads((sd / "settings.json").read_text(encoding="utf-8"))
+    assert data["env"] == {"FOO": "1"}  # 其它配置键原样
+    stops = data["hooks"]["Stop"]
+    assert any("user-own-hook" in e["hooks"][0]["command"] for e in stops)
+    assert any("evo_agent_state_hook" in e["hooks"][0]["command"]
+               for e in stops)  # 同事件追加，不顶掉
+    # 损坏文件：拒写保护
+    (sd / "settings.json").write_text("{broken", encoding="utf-8")
+    install_claude_project_hooks()
+    assert (sd / "settings.json").read_text(encoding="utf-8") == "{broken"
 
 
 def test_dialogs_cover_three_agents():
@@ -184,6 +213,8 @@ def test_install_all_opt_in_writes_global(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     installed = install_all(tmp_path / "proj", include_global=True)
     assert set(installed) == {"claude", "codex", "kimi", "grok"}
+    assert installed["claude"] == str(
+        tmp_path / ".claude" / "settings.json")  # 用户级
     assert "hooks" in (tmp_path / ".codex" / "config.toml").read_text(
         encoding="utf-8"
     )
@@ -199,7 +230,7 @@ def test_install_all_opt_in_writes_global(tmp_path, monkeypatch):
     assert str(central) in data["hooks"]["SessionStart"][0]["hooks"][0]["command"]
     for cfg in (tmp_path / ".codex" / "config.toml",
                 tmp_path / ".kimi-code" / "config.toml",
-                tmp_path / "proj" / ".claude" / "settings.json"):
+                tmp_path / ".claude" / "settings.json"):
         assert str(central) in cfg.read_text(encoding="utf-8"), cfg
     assert not (tmp_path / ".grok" / HOOK_NAME).exists()  # 不再按 agent 散落
 

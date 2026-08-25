@@ -183,10 +183,10 @@ def install_grok_hooks() -> Path:
 
 
 def install_all(project_dir: Path, include_global: bool = False) -> dict[str, str]:
-    """装状态 hook：项目级 claude 恒装（grok 项目级同源兼容读）；codex/
-    kimi/grok 全局配置仅 include_global（显式授权）时写，默认绝不碰
-    用户全局配置。"""
-    installed = {"claude": str(install_claude_project_hooks(project_dir))}
+    """装状态 hook：四端全装用户配置目录（claude/grok 写 ~/.claude 与
+    ~/.grok，codex/kimi 同理），命令恒指中央单点 ~/.evo-harness/——
+    hook 统一一个 py + 注册统一一层（用户定调 2026-08-25）。"""
+    installed = {"claude": str(install_claude_project_hooks())}
     if include_global:
         installed["codex"] = str(install_codex_hooks())
         installed["kimi"] = str(install_kimi_hooks())
@@ -194,24 +194,31 @@ def install_all(project_dir: Path, include_global: bool = False) -> dict[str, st
     return installed
 
 
-def install_claude_project_hooks(project_dir: Path) -> Path:
-    """把状态 hook 写进 <project>/.claude/settings.json（幂等 + 备验）。
+def install_claude_project_hooks(project_dir: Path | None = None) -> Path:
+    """把状态 hook 写进用户级 ~/.claude/settings.json（幂等 + 备验）。
 
-    只追加我们的 hook，保留用户已有的其它 hook；重复安装不产生重复条目。
+    用户定调（2026-08-25）：claude 与 codex/kimi/grok 同层装用户配置目录，
+    不再按项目散落 <project>/.claude/settings.json——项目级每次命令变更
+    都触发 hook 信任确认框，launch 就绪探针被框挡死（grok-debut-r3/r4
+    两轮 LAUNCH_FAILED 实证）；用户级命令恒指中央单点，批准一次终身有效。
+    project_dir 参数保留兼容但不再使用。
     """
-    claude_dir = Path(project_dir) / ".claude"
+    claude_dir = Path.home() / ".claude"
     script = land_hook_script()
     claude_dir.mkdir(parents=True, exist_ok=True)
     settings = claude_dir / "settings.json"
 
     data: dict = {}
     if settings.exists():
-        backup = settings.with_suffix(".json.bak")
-        shutil.copy2(settings, backup)
+        _backup(settings)  # 首份备份（.evobak），已有备份不覆盖
         try:
             data = json.loads(settings.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
-            data = {}
+            # 用户定调：绝不破坏原有 hook——解析失败拒写退出，
+            # 不许用空 dict 顶掉用户现有配置
+            print(f"[hooks] {settings} 解析失败，拒写以保护既有配置",
+                  file=sys.stderr)
+            return settings
 
     hooks = data.setdefault("hooks", {})
     cmd = hook_command(script)
