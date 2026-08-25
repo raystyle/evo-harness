@@ -26,7 +26,7 @@ SPIN = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 
 # 赛博朋克霓虹板（真彩 hex；终端不支持时 rich 自动降级 ANSI16）
 NEON_CYAN = "#00ffff"      # 主电网青 ， 流程/结构/系统域（GRAPH、AGENTS、派发）
-NEON_MAGENTA = "#ff00ff"   # 主霓虹品红 ， 唤醒域主色（NOTIFY 面板 + ⚖/✉ 事件）
+NEON_MAGENTA = "#ff00ff"   # 主霓虹品红 ， 唤醒域主色（NOTIFY 面板 + ※/※ 事件）
 NEON_PINK = "#ff2d95"      # 热粉
 NEON_YELLOW = "#ffd300"    # 高压钠黄 ， AGENTS 面板主色 + 注意/在途语义
 NEON_GREEN = "#00ff87"     # 荧光绿
@@ -34,8 +34,8 @@ NEON_VIOLET = "#875fff"    # 紫电 ， GOAL 专属身份色（全屏唯一）
 DIM_GRID = "#5f5f87"       # 暗紫网格（结构线）
 
 KIND_STYLE = {
-    "decision": f"bold {NEON_MAGENTA}",  # ⚖ 与 ✉ 同属唤醒域，单紫不混
-    "notify": f"bold {NEON_MAGENTA}",  # notifyd 守护事件（✉，事件流融合）
+    "decision": f"bold {NEON_MAGENTA}",  # ※ 与 ※ 同属唤醒域，单紫不混
+    "notify": f"bold {NEON_MAGENTA}",  # notifyd 守护事件（※，事件流融合）
     "dispatch": NEON_CYAN, "tasks_done": NEON_GREEN, "gate": f"bold {NEON_GREEN}",
     "aggregate": NEON_CYAN, "round": NEON_YELLOW, "nudge": NEON_YELLOW,
     "hard_stop": f"bold {NEON_PINK}", "consensus": f"bold {NEON_GREEN}",
@@ -63,7 +63,7 @@ def _fmt_event(kind: str, detail: str) -> tuple[str, str]:
     if kind == "run_start":
         return "⌖", goal_brief(detail)  # 全文在 GOAL 面板，流里只留一句
     if kind == "notify":
-        return "✉", detail[:72]  # notifyd 守护动作（注入/收尾通知）
+        return "※", detail[:72]  # notifyd 守护动作（注入/收尾通知）
     if kind == "decision":
         # "plan-approval 请求决策（默认 approve…）: brief" / "plan-approval → approve"
         if " → " in detail:
@@ -230,7 +230,7 @@ def _units_panel(root: Path) -> Panel | None:
 
 def _notify_panel(root: Path, spin: str) -> Panel:
     """值守状态 + 决策节点全景（用户定调：一切状态都要可视化；icon 素化，
-    沿用全局既有标记 ⚖ 决策 / ✓ 成 / ✗ 败，值守行靠颜色+spinner 表身份，
+    沿用全局既有标记 ※ 决策 / ✓ 成 / ✗ 败，值守行靠颜色+spinner 表身份，
     排版对齐 GOAL 面板：行内居中、段间 · 分隔）。"""
     state, dm = _daemon_state(root)
     rows: list[Align] = []
@@ -342,7 +342,7 @@ def build(root: Path, tick: int) -> Layout:
     pulse = tick % 2 == 0
 
     layout = Layout()
-    # ✉ NOTIFY 面板：守护拉起过或出现过决策节点才占行（fake/非 herdr run 不留空框）
+    # ※ NOTIFY 面板：守护拉起过或出现过决策节点才占行（fake/非 herdr run 不留空框）
     dec_rows = _decision_rows(root)
     show_notify = _daemon_state(root)[0] != "off" or bool(dec_rows)
     units = _units_panel(root)

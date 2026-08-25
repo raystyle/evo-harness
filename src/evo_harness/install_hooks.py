@@ -17,7 +17,9 @@ import shutil
 import sys
 from pathlib import Path
 
-HOOK_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "agent_state_hook.py"
+# 脚本随包分发（src/evo_harness/scripts/）：uv tool / pip 装出的环境里
+# 仓顶 scripts/ 不存在，包内路径才跨安装形态成立
+HOOK_SCRIPT = Path(__file__).resolve().parent / "scripts" / "agent_state_hook.py"
 
 
 def _backup(path: Path) -> None:

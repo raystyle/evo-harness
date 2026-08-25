@@ -9,8 +9,8 @@ import evo_harness.states as st
 
 
 def _script_map() -> dict:
-    src = Path(st.__file__).parents[2].joinpath(
-        "scripts", "agent_state_hook.py").read_text(encoding="utf-8")
+    src = (Path(st.__file__).parent / "scripts" / "agent_state_hook.py"
+           ).read_text(encoding="utf-8")
     m = re.search(r"STATE_MAP[^=]*=\s*\{(.*?)\}", src, re.S)
     return ast.literal_eval("{" + m.group(1) + "}")
 

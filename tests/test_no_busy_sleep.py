@@ -31,9 +31,9 @@ def test_no_time_sleep_in_sources():
     # 守护进程（自有 pane，2s 轮询决策目录）·都不在编排事件循环内
     exempt = ("__pycache__",)
     for py in sorted(SRC.rglob("*.py")):
-        if any(part in py.parts for part in exempt) or py.name in (
-            "monitor.py", "notifyd.py"
-        ):
+        if (any(part in py.parts for part in exempt)
+                or py.name in ("monitor.py", "notifyd.py")
+                or py.parent.name == "scripts"):  # 包内 scripts=夹具（fake_agent 等）
             continue
         tree = ast.parse(py.read_text(encoding="utf-8"))
         for line in _time_sleep_calls(tree):

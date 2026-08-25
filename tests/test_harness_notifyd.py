@@ -355,11 +355,11 @@ def test_herdr_client_argv_and_parsing(monkeypatch):
     c = HerdrClient()
     assert c.pane_current()["pane_id"] == "w4:p1"
     assert c.agent_wait_idle("w4:p1", 600_000)
-    assert c.agent_prompt("w4:p1", "⚖ 文本")
+    assert c.agent_prompt("w4:p1", "※ 文本")
     assert calls[1][1:6] == ("agent", "wait", "w4:p1", "--until", "idle")
     assert calls[1][-2:] == ("--timeout", "600000")
     assert calls[2][1:4] == ("agent", "prompt", "w4:p1")
-    assert calls[2][4] == "⚖ 文本"
+    assert calls[2][4] == "※ 文本"
 
 
 def test_herdr_client_timeout_and_bad_json(monkeypatch):
@@ -467,7 +467,7 @@ def test_spawn_notifyd_guard_and_no_herdr(monkeypatch, tmp_path):
 
 def test_log_notify_appends_jsonl(tmp_path):
     from evo_harness.notifyd import log_notify
-    log_notify(tmp_path, "⚖ plan-approval 决策简报注入 ok → w4:p1")
+    log_notify(tmp_path, "※ plan-approval 决策简报注入 ok → w4:p1")
     log_notify(tmp_path, "run 终态 done，收尾通知已注入 w4:p1")
     lines = (tmp_path / "notify_events.jsonl").read_text(
         encoding="utf-8").strip().splitlines()
@@ -478,7 +478,7 @@ def test_log_notify_appends_jsonl(tmp_path):
 
 
 def test_tick_writes_notify_event(tmp_path):
-    """投递动作落 jsonl：monitor 事件流的 ✉ 行数据源。"""
+    """投递动作落 jsonl：monitor 事件流的 ※ 行数据源。"""
     led = NotifyLedger(tmp_path / "r1" / "notify_state.json")
     c = FakeClient()
     _tick(tmp_path, c, led, now=1000.0, pending={"plan-approval": "x"})
@@ -495,19 +495,19 @@ def test_merged_history_weaves_notify_events(tmp_path):
     # 无 jsonl：原样
     assert _merged_history(tmp_path, hist) is hist
     (tmp_path / "notify_events.jsonl").write_text(
-        json.dumps({"t": 200.0, "kind": "notify", "detail": "✉ n1"})
+        json.dumps({"t": 200.0, "kind": "notify", "detail": "※ n1"})
         + "\n{broken\n"
-        + json.dumps({"t": 50.0, "kind": "notify", "detail": "✉ n0"}) + "\n",
+        + json.dumps({"t": 50.0, "kind": "notify", "detail": "※ n0"}) + "\n",
         encoding="utf-8")
     merged = _merged_history(tmp_path, hist)
     assert [e["t"] for e in merged] == [50.0, 100.0, 200.0, 300.0]
-    assert merged[0]["detail"] == "✉ n0"
+    assert merged[0]["detail"] == "※ n0"
 
 
 def test_monitor_renders_notify_kind_icon():
     from evo_harness.monitor import KIND_STYLE, _fmt_event
-    icon, detail = _fmt_event("notify", "⚖ n1 注入 ok → w4:p1")
-    assert icon == "✉" and "n1" in detail
+    icon, detail = _fmt_event("notify", "※ n1 注入 ok → w4:p1")
+    assert icon == "※" and "n1" in detail
     assert "notify" in KIND_STYLE
 
 

@@ -28,7 +28,7 @@ from pathlib import Path
 
 from .config import HarnessConfig
 
-FAKE_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "fake_agent.py"
+FAKE_SCRIPT = Path(__file__).resolve().parent / "scripts" / "fake_agent.py"  # 包内随发
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -323,7 +323,7 @@ def _place_herdr_monitor(run_id: str, shared: Path) -> str | None:
 def _spawn_notifyd(run_id: str, shared: Path) -> bool:
     """决策唤醒守护无头拉起（不占窗格，2026-08-25 用户定调单窗格控制台）。
 
-    守护动作写 notify_events.jsonl，由 monitor 融合渲染进事件流（✉ 行），
+    守护动作写 notify_events.jsonl，由 monitor 融合渲染进事件流（※ 行），
     不再开裸 shell 窗格打日志。主窗格仍由 ``pane current`` 在拉起时钉死。
     fail-open：失败仅告警，run 照跑（决策仍可 wait-decision/monitor 手动参与）。
     """
