@@ -20,6 +20,23 @@ from pathlib import Path
 # 脚本随包分发（src/evo_harness/scripts/）：uv tool / pip 装出的环境里
 # 仓顶 scripts/ 不存在，包内路径才跨安装形态成立
 HOOK_SCRIPT = Path(__file__).resolve().parent / "scripts" / "agent_state_hook.py"
+HOOK_NAME = "evo_agent_state_hook.py"  # 落进 agent 配置目录的文件名
+
+
+def land_hook_script(dest_dir: Path) -> Path:
+    """把 agent_state_hook.py 落进 agent 配置目录（自包含注册）。
+
+    命令若指向工具安装路径，升级/重装/迁移即断链（accept-v04-r1 实证：
+    用户层 config 指向已删的旧仓脚本，kimi/codex hook 全盲、pool 误判）。
+    落本地副本后配置自包含，工具怎么换都不影响已装的 hook。
+    幂等：内容相同不重写（保 mtime），不同则覆盖（升级脚本随之刷新）。
+    """
+    dest = Path(dest_dir) / HOOK_NAME
+    src = HOOK_SCRIPT.read_bytes()
+    if not dest.exists() or dest.read_bytes() != src:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(src)
+    return dest
 
 
 def _backup(path: Path) -> None:
@@ -39,10 +56,14 @@ CLAUDE_EVENTS = [
 ]
 
 
-def hook_command() -> str:
-    # 当前解释器的绝对路径：Windows 标准安装通常没有 python3（只有 python/py），
-    # sys.executable 三平台都指向可用的那个解释器
-    return f'"{sys.executable}" "{HOOK_SCRIPT}"'
+def hook_command(script: Path | None = None) -> str:
+    """hook 命令（解释器绝对路径 + 落点脚本）。
+
+    Windows 标准安装通常没有 python3（只有 python/py），sys.executable
+    三平台都指向可用的那个解释器；script 缺省用包内源（测试直跑用），
+    安装路径一律传 land_hook_script 的落点。
+    """
+    return f'"{sys.executable}" "{script or HOOK_SCRIPT}"'
 
 
 CODEX_HOOK_EVENTS = (
@@ -65,6 +86,7 @@ def install_codex_hooks() -> Path:
     import re
 
     cfg = Path.home() / ".codex" / "config.toml"
+    script = land_hook_script(cfg.parent)
     cfg.parent.mkdir(parents=True, exist_ok=True)
     text = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
 
@@ -80,7 +102,7 @@ def install_codex_hooks() -> Path:
         else:
             text += "\n[features]\n# evo-harness: enable agent-state hooks\nhooks = true\n"
 
-    esc = hook_command().replace("\\", "\\\\").replace('"', '\\"')
+    esc = hook_command(script).replace("\\", "\\\\").replace('"', '\\"')
     # 幂等按事件块判（整文件 command 早退会让后补的事件永远装不上）
     if all(f"[[hooks.{ev}]]" in text for ev in CODEX_HOOK_EVENTS):
         return cfg  # 全事件已装
@@ -107,9 +129,10 @@ def install_codex_hooks() -> Path:
 def install_kimi_hooks() -> Path:
     """kimi 全局 hooks（~/.kimi-code/config.toml 追加 [[hooks]] 块，幂等+备份）。"""
     cfg = Path.home() / ".kimi-code" / "config.toml"
+    script = land_hook_script(cfg.parent)
     cfg.parent.mkdir(parents=True, exist_ok=True)
     content = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
-    esc = hook_command().replace("\\", "\\\\").replace('"', '\\"')
+    esc = hook_command(script).replace("\\", "\\\\").replace('"', '\\"')
     _K = ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse",
           "PermissionRequest", "Stop", "Interrupt")
     if all(f'event = "{ev}"' in content for ev in _K):
@@ -140,6 +163,7 @@ def install_claude_project_hooks(project_dir: Path) -> Path:
     只追加我们的 hook，保留用户已有的其它 hook；重复安装不产生重复条目。
     """
     claude_dir = Path(project_dir) / ".claude"
+    script = land_hook_script(claude_dir)
     claude_dir.mkdir(parents=True, exist_ok=True)
     settings = claude_dir / "settings.json"
 
@@ -153,18 +177,19 @@ def install_claude_project_hooks(project_dir: Path) -> Path:
             data = {}
 
     hooks = data.setdefault("hooks", {})
-    cmd = hook_command()
+    cmd = hook_command(script)
     # schema 要求 type 字段；缺了 claude 启动即弹 Settings Error 模态框
     ours = {"type": "command", "command": cmd, "timeout": 10}
 
     for event, matcher in CLAUDE_EVENTS:
         entries = hooks.setdefault(event, [])
-        # 幂等：已有同命令条目则跳过
+        # 幂等：已有任一指向本脚本的条目即跳过（按脚本名判，换解释器
+        # 路径/工具重装不产生重复注册）
         existing = {
-            e.get("hooks", [{}])[0].get("command")
+            e.get("hooks", [{}])[0].get("command", "")
             for e in entries if isinstance(e, dict)
         }
-        if cmd in existing:
+        if any(HOOK_NAME in c for c in existing):
             continue
         entries.append({"matcher": matcher, "hooks": [ours]})
 

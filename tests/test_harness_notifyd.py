@@ -771,6 +771,38 @@ def test_units_panel_lists_planes(tmp_path):
     assert len([l for l in out.splitlines() if l.strip()]) == 3  # 单行不折行
 
 
+# ------------------------------------------------- preflight 启动预检 ----
+
+def test_preflight_blocks_when_rmux_missing(console, monkeypatch, capsys):
+    from evo_harness import cli
+    monkeypatch.setenv("HERDR_ENV", "1")
+    monkeypatch.setattr("shutil.which", lambda n: None if n == "rmux" else "/x")
+    assert cli.main(["run", "目标", "--shared", "s"]) == 3
+    assert "rmux" in capsys.readouterr().err
+    assert console["mon"] == []  # 预检先于落位，不起跑
+
+
+def test_preflight_blocks_on_missing_dep(monkeypatch, capsys, tmp_path):
+    import builtins
+    from evo_harness import cli
+    real_import = builtins.__import__
+
+    def _broken(name, *a, **k):
+        if name == "watchdog":
+            raise ImportError(name)
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", _broken)
+    assert cli.main(["review-cycle", "g", "--shared", str(tmp_path)]) == 3
+    assert "watchdog" in capsys.readouterr().err
+
+
+def test_preflight_passes_with_runtime_ready(console, monkeypatch):
+    from evo_harness import cli
+    monkeypatch.setenv("HERDR_ENV", "1")
+    assert cli.main(["run", "目标", "--shared", "s"]) == 0  # 走到落位/空转
+
+
 # ------------------------------------------------------------ main 集成 ----
 
 @pytest.fixture(autouse=True)

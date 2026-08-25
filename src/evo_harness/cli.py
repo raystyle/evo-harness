@@ -227,6 +227,61 @@ def _detach_popen_kwargs() -> dict:
     }
 
 
+def preflight(require_rmux: bool) -> int | None:
+    """启动预检（2026-08-25 用户定调）：依赖运行时没装好就警告退出，
+    不许带病起跑后 hook/编排半路哑掉。
+
+    - Python 依赖（librmux/rich/watchdog）必须可导入，缺了提示重装命令；
+    - require_rmux（run/review-cycle）还要求 rmux 二进制在 PATH；
+    - herdr 可选：缺席只影响控制台/注入层，各处 fail-open，不在预检拦。
+    """
+    missing = []
+    for mod in ("librmux", "rich", "watchdog"):
+        try:
+            __import__(mod)
+        except ImportError:
+            missing.append(mod)
+    if missing:
+        print(f"[preflight] Python 依赖缺失: {', '.join(missing)}"
+              f"；重装: uv tool install --force "
+              f"git+https://github.com/raystyle/evo-harness",
+              file=sys.stderr)
+        return 3
+    if require_rmux:
+        import shutil
+        if shutil.which("rmux") is None:
+            print("[preflight] 未找到 rmux 二进制（控制平面 daemon）。"
+                  "安装后加入 PATH 再跑；检查命令: rmux -V",
+                  file=sys.stderr)
+            return 3
+    return None
+
+
+def _sh_join(tokens) -> str:
+    """跨平台 shell 拼接：POSIX 用 shlex.quote；Windows（cmd）用双引号
+    包裹含空格/特殊字符的 token（内嵌双引号转 \"，尾部反斜杠保住）。
+    rmux/herdr 的 pane run / new-session 在 Windows 侧走 cmd，POSIX 语义
+    的 shlex.quote 会产出单引号导致命令不可执行。macOS 与 Linux 同为 POSIX。
+    """
+    import shlex
+    toks = [str(x) for x in tokens]
+    if os.name != "nt":
+        return " ".join(shlex.quote(x) for x in toks)
+    out = []
+    for x in toks:
+        if not x:
+            out.append('""')
+            continue
+        if any(ch in x for ch in ' 	"&|<>^()'):
+            body = x.replace('"', '\\"')
+            if body.endswith("\\"):
+                body += "\\"
+            out.append(f'"{body}"')
+        else:
+            out.append(x)
+    return " ".join(out)
+
+
 def _record_console(shared: Path, run_id: str, key: str, value: dict) -> None:
     """控制台清单落盘（console.json）：哪个执行单元、哪个平面、哪个 pane。
     monitor 的 UNITS 面板数据源；落位序列单线程，read-modify-write 安全。"""
@@ -300,7 +355,7 @@ def _place_herdr_monitor(run_id: str, shared: Path) -> str | None:
             pass  # 异壳/慢启动没等到提示符，照投（SKILL：未稳吞首字符的弱化）
         mon = subprocess.run(
             [herdr, "pane", "run", pane_id]
-            + [shlex.quote(t) for t in (
+            + [_sh_join([t]) for t in (
                 sys.executable, "-m", "evo_harness.cli", "monitor",
                 "--shared", str(shared), "--run-id", run_id,
             )],
@@ -407,9 +462,11 @@ def _spawn_flow_in_rmux_session(args, run_id: str) -> bool:
             argv.append("--global-hooks")
         log = Path(args.shared) / run_id / "harness.log"
         log.parent.mkdir(parents=True, exist_ok=True)
+        # 环境前缀 + 重定向管道是 POSIX 语义；Windows 目标仓按 cmd 方言
+        # 生成（set "K=V" && … 2>&1 | findstr 不等价，暂不追求，见 README 平台矩阵）
         cmd = ("EVO_HERDR_MONITOR_PLACED=1 "
-               + " ".join(shlex.quote(x) for x in argv)
-               + f" 2>&1 | tee -a {shlex.quote(str(log))}")
+               + _sh_join(argv)
+               + f" 2>&1 | tee -a {_sh_join([str(log)])}")
         session = f"evo-{run_id}"
         proc = subprocess.run(
             [rmux, "new-session", "-d", "-s", session, cmd],
@@ -693,6 +750,11 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(
             _wait_command(Path(args.shared), run_id, args.timeout)
         )
+
+    if args.command in ("run", "review-cycle"):
+        rc = preflight(require_rmux=True)
+        if rc is not None:
+            return rc
 
     # P8.4 monitor + notifyd 控制台自动落位 + flow rmux 调度：herdr 会话内
     # （HERDR_ENV=1 由 herdr 起 pane 时注入）。EVO_HERDR_MONITOR_PLACED=1

@@ -15,6 +15,22 @@ explore → research → plan → execute ⇄ review → merge → DONE
 herdr 会话内实拍：左窗格主 agent（决策者），右窗格 monitor 控制台，
 六面板直播执行单元清单 / 目标 / 阶段图 / 决策值守 / 三 agent 状态 / 事件流。
 
+## 平台兼容
+
+| 平台 | 状态 | 说明 |
+|------|------|------|
+| Linux / WSL2 | 已验证 | 全功能：编排 / 控制台 / 注入唤醒 |
+| macOS | 预期可用 | rmux 官方支持；shell 拼接同 POSIX；herdr 缺席时控制台层自动降级（fail-open） |
+| Windows | 核心已备、待实测 | pid 探测 / 自守护分支已内建；`_sh_join` 按 cmd 方言拼接；herdr 层自动降级；端到端回归排期中 |
+
+## 稳健性
+
+- **启动预检**：`run/review-cycle` 起跑前检查 Python 依赖与 rmux 二进制，
+  缺失即警告退出（exit 3），不带病起跑。
+- **hook 自包含**：安装时把 `evo_agent_state_hook.py` 落进各 agent 配置
+  目录（`.claude/`、`~/.codex/`、`~/.kimi-code/`），命令引用落点副本；
+  工具升级/重装/迁移不再断链，内容比对幂等（升级自动刷新）。
+
 ## 前提（运行时三依赖）
 
 | 依赖 | 用途 | 检查 |
