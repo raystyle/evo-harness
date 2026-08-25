@@ -40,6 +40,16 @@ DEFAULT_AGENTS: dict[str, AgentSpec] = {
     # kimi 输入符是 `>`（│ > │ 线框，0.38 实测）；单字符泛，但 wait_ready
     # 只是就绪启发，真活性判官是探针（--next-text 回显）→ 误命中无害
     "kimi": AgentSpec(name="kimi", cmd="kimi", args=("--auto",), ready_text=">"),
+    # grok 1.0.5（docs/user-guide 10-hooks.md 实证）：
+    # - hook 兼容读 .claude/settings.json（项目级需 folder trust，--trust 即过，
+    #   记 ~/.grok/trusted_folders.toml）；事件名与 claude 同构
+    # - yolo：--always-approve（等价 config permission_mode="always-approve"）
+    # - ready 留空走驱动默认提示符标记（❯/›/>）
+    "grok": AgentSpec(
+        name="grok", cmd="grok",
+        args=("--always-approve", "--trust"),
+        ready_text="",
+    ),
     "claude": AgentSpec(
         name="claude",
         cmd="claude",
@@ -93,6 +103,7 @@ class Budget:
 # 首次信任/确认框特征与按键序列（CoreSkills agent-trust-mechanisms.md 实测沉淀）。
 # 匹配大小写不敏感；kimi 默认高亮在 "Don't trust"，必须 Up×3 到信任项再 Enter。
 DIALOGS: dict[str, list[tuple[str, tuple[str, ...]]]] = {
+    "grok": [],  # --trust 过 folder-trust 门；未见其它确认框（1.0.5 docs）
     "codex": [
         ("do you trust the contents", ("Enter",)),
         ("do you trust this directory", ("1", "Enter")),

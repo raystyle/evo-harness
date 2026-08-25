@@ -180,6 +180,8 @@ def test_drive_clean_screen_sends_no_dialog_keys():
 def test_drive_dialog_sweep_covers_all_agents():
     """并集扫描：codex/kimi/claude 各自的 marker 都能命中并按各自键序处置。"""
     for agent, specs in DIALOGS.items():
+        if not specs:  # grok：--trust 门下无已知确认框
+            continue
         marker, keys = specs[0]
         log = []
         d, _, pane = _mk(log, dialog_lines=[marker.upper()])

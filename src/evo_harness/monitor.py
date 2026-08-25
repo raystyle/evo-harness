@@ -49,7 +49,8 @@ STATE_STYLE = {"working": f"bold {NEON_CYAN}", "idle": NEON_GREEN,
                "unknown": NEON_YELLOW}
 STATE_DOT = {"working": "●", "idle": "○", "blocked": "⊘", "done": "✓",
              "unknown": "?"}
-AGENT_COLOR = {"claude": "#ff5fff", "kimi": "#00d7ff", "codex": NEON_GREEN}
+AGENT_COLOR = {"claude": "#ff5fff", "kimi": "#00d7ff", "codex": NEON_GREEN,
+               "grok": "#ff8c00"}  # grok 霓虹橙（五色域外的新身份色）
 
 import re as _re
 

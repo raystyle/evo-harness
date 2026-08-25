@@ -1,6 +1,6 @@
 # evo-harness
 
-六阶段 Graph-of-Loops 编排器：用 rmux 后台会话把 **codex / kimi / claude** 装进同一
+六阶段 Graph-of-Loops 编排器：用 rmux 后台会话把 **codex / kimi / claude / grok** 装进同一
 执行体系，按阶段图推进，模型只填角色模板，控制权在代码。
 
 ```
@@ -55,7 +55,7 @@ evo-harness --help                                            # 验证
 ```bash
 evo-harness run "<目标>" --fake              # 确定性模式（不调真 LLM，先验编排）
 evo-harness run "<目标>"                     # 真实 agent 六阶段
-evo-harness review-cycle "<目标>" [--rounds N]   # 三 agent 循环 review 到一致
+evo-harness review-cycle "<目标>" [--rounds N]   # 四 agent 循环 review 到一致
 evo-harness monitor [--run-id ID]            # TUI 控制台（graph loop / 事件流 / 决策面板）
 evo-harness status / wait / abort / decide / contract / clean-wt
 ```
@@ -71,7 +71,7 @@ flow 专属 rmux 会话，CLI 单行交接即退，决策（※）/终态（✔�
 | 类别 | 单元 | 宿主 | 职责 |
 |------|------|------|------|
 | 控制单元 | flow 编排进程 | rmux 后台会话 `evo-<run_id>` | 状态机 / 任务队列 / 门禁 / 自愈 |
-| 控制单元 | worker 池 ×3 | rmux panes | 干活（claude / kimi / codex），产物只有 markdown |
+| 控制单元 | worker 池 ×4 | rmux panes | 干活（claude / kimi / codex / grok），产物只有 markdown |
 | 操作单元 | monitor 控制台 | herdr 右窗格 | 六面板直播，只读零干扰 |
 | 操作单元 | notifyd 守护 | 无头进程 | 决策简报注入主 agent（恰在 idle 时） |
 | 决策单元 | 主 agent | herdr 主窗格 | 关键节点批准 / 改道 / 否决（※） |
@@ -82,8 +82,8 @@ main window (herdr)                    rmux daemon (independent)
 | main agent pane   [idle]  |<--inject--+ flow session  evo-<run> |
 |   ^ decision brief (*)    |          |   | task queue           |
 |   | decides via CLI       |          |   v                      |
-| monitor pane (right)      |          | worker x3 panes          |
-|   live 6-panel console    |          |   claude / kimi / codex  |
+| monitor pane (right)      |          | worker x4 panes          |
+|   live 6-panel console    |          |   claude/kimi/codex/grok |
 +---------------------------+          +--------------------------+
         ^ read-only                      ^ file bus only
         +---------- .evo_tasks/<run>/ ---+

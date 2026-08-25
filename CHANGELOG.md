@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 第四端接入：grok
+- 研究先行（docs/user-guide 实证 2026-08-25）：hook 兼容读
+  `.claude/settings.json`（项目级需 folder-trust，`--trust` 旗标即过）；
+  事件名与 claude 全同构；yolo = `--always-approve`（等价 config
+  `permission_mode="always-approve"`）
+- AgentSpec（--always-approve --trust，ready 走驱动默认标记）；
+  review-cycle 第四维度「安全与健壮性」；monitor 身份色霓虹橙；
+  全局 hook 装进 `~/.grok/hooks/`（恒信任目录，claude 同构 JSON，
+  脚本照落配置目录）；项目级同源复用 claude 安装
+
+## [Unreleased]
+
 - fix: `run`/`review-cycle` 兜底非 HardStop 异常（WorktreeError 等），
   一律落 ESCALATE 终态 + exit 2——旧实现裸穿后 run.json 假活 running、
   notifyd 无限空转（accept-v04-r2 rc-r1 must-fix）

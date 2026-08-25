@@ -147,13 +147,46 @@ def install_kimi_hooks() -> Path:
     return cfg
 
 
+def install_grok_hooks() -> Path:
+    """grok 全局 hook（~/.grok/hooks/*.json，恒信任，claude 同构格式）。
+
+    grok 兼容读 .claude/settings.json：项目级 hook 已由 claude 安装覆盖
+    （launch 带 --trust 过 folder-trust 门）；全局侧写自己的目录，不污染
+    ~/.claude。事件名与 claude 全同构（SessionStart/UserPromptSubmit/
+    PreToolUse/PostToolUse/Stop/Notification）。
+    """
+    hooks_dir = Path.home() / ".grok" / "hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    script = land_hook_script(hooks_dir.parent)
+    hooks = hooks_dir / "evo-state.json"
+    ours = {"type": "command", "command": hook_command(script), "timeout": 10}
+    data: dict = {"hooks": {}}
+    if hooks.exists():
+        try:
+            data = json.loads(hooks.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            data = {"hooks": {}}
+    ev = data.setdefault("hooks", {})
+    for event, _matcher in CLAUDE_EVENTS:
+        entries = ev.setdefault(event, [])
+        if any(HOOK_NAME in e.get("hooks", [{}])[0].get("command", "")
+               for e in entries if isinstance(e, dict)):
+            continue
+        entries.append({"matcher": "*", "hooks": [ours]})
+    hooks.write_text(json.dumps(data, ensure_ascii=False, indent=2),
+                     encoding="utf-8")
+    return hooks
+
+
 def install_all(project_dir: Path, include_global: bool = False) -> dict[str, str]:
-    """装状态 hook：项目级 claude 恒装；codex/kimi 全局配置仅 include_global
-    （显式授权）时写，默认绝不碰用户全局配置。"""
+    """装状态 hook：项目级 claude 恒装（grok 项目级同源兼容读）；codex/
+    kimi/grok 全局配置仅 include_global（显式授权）时写，默认绝不碰
+    用户全局配置。"""
     installed = {"claude": str(install_claude_project_hooks(project_dir))}
     if include_global:
         installed["codex"] = str(install_codex_hooks())
         installed["kimi"] = str(install_kimi_hooks())
+        installed["grok"] = str(install_grok_hooks())
     return installed
 
 

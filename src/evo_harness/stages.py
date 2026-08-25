@@ -631,6 +631,7 @@ class Harness:
                 "claude": "正确性与实现质量（源码逻辑/边界/并发/测试覆盖）",
                 "kimi": "完整性与文档（SKILL/references/CHANGELOG/门禁/安装路径）",
                 "codex": "可生产性（部署/分发/宿主接入/CI/跨平台缺口）",
+                "grok": "安全与健壮性（攻击面/边界输入/资源泄漏/依赖供应链）",
             }
             round_no = 0
             while True:  # extend 决策可动态加轮，审计 r3：range 定值使 extend 无效

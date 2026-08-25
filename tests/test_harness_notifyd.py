@@ -677,7 +677,9 @@ def test_spawn_flow_in_rmux_session(monkeypatch, capsys, tmp_path):
     assert " --detach" not in cmd  # 会话即 detach
     inv = json.loads((tmp_path / "r1" / "console.json").read_text(encoding="utf-8"))
     assert inv["flow"]["plane"] == "rmux"
-    assert inv["flow"]["session"] == "evo-r1" and inv["flow"]["workers"] == 3
+    from evo_harness.config import DEFAULT_AGENTS
+    n = len([k for k in DEFAULT_AGENTS if k != "fake"])
+    assert inv["flow"]["session"] == "evo-r1" and inv["flow"]["workers"] == n
     assert "已入会话" in capsys.readouterr().err
 
 

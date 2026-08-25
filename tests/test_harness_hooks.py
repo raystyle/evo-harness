@@ -11,6 +11,7 @@ from evo_harness.config import DIALOGS
 from evo_harness import monitor
 from evo_harness.cli import FAKE_SCRIPT
 from evo_harness.install_hooks import (
+    HOOK_NAME,
     HOOK_SCRIPT,
     install_all,
     install_claude_project_hooks,
@@ -182,13 +183,17 @@ def test_install_all_opt_in_writes_global(tmp_path, monkeypatch):
     """显式授权后才写全局 hook（幂等 + 备份）。"""
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     installed = install_all(tmp_path / "proj", include_global=True)
-    assert set(installed) == {"claude", "codex", "kimi"}
+    assert set(installed) == {"claude", "codex", "kimi", "grok"}
     assert "hooks" in (tmp_path / ".codex" / "config.toml").read_text(
         encoding="utf-8"
     )
     assert "[[hooks]]" in (tmp_path / ".kimi-code" / "config.toml").read_text(
         encoding="utf-8"
     )
+    grok_hooks = tmp_path / ".grok" / "hooks" / "evo-state.json"
+    data = json.loads(grok_hooks.read_text(encoding="utf-8"))
+    assert "SessionStart" in data["hooks"]  # claude 同构、恒信任目录
+    assert (tmp_path / ".grok" / HOOK_NAME).exists()  # 脚本已落配置目录
 
 
 def test_codex_hooks_session_end_timeout_clamped(tmp_path, monkeypatch):
