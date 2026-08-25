@@ -23,18 +23,22 @@ HOOK_SCRIPT = Path(__file__).resolve().parent / "scripts" / "agent_state_hook.py
 HOOK_NAME = "evo_agent_state_hook.py"  # 落进 agent 配置目录的文件名
 
 
-def land_hook_script(dest_dir: Path) -> Path:
-    """把 agent_state_hook.py 落进 agent 配置目录（自包含注册）。
+HOOK_HOME = ".evo-harness"  # 全局唯一落点目录（~/.evo-harness/）
 
-    命令若指向工具安装路径，升级/重装/迁移即断链（accept-v04-r1 实证：
-    用户层 config 指向已删的旧仓脚本，kimi/codex hook 全盲、pool 误判）。
-    落本地副本后配置自包含，工具怎么换都不影响已装的 hook。
-    幂等：内容相同不重写（保 mtime），不同则覆盖（升级脚本随之刷新）。
+
+def land_hook_script() -> Path:
+    """hook 脚本全局唯一落点：~/.evo-harness/evo_agent_state_hook.py。
+
+    四端（claude/codex/kimi/grok）配置统一指向这一份（用户定调：hook
+    统一成一个 py 文件）。命令若指向工具安装路径，升级/重装/迁移即断链
+    （accept-v04-r1 实证）；落全局单副本后自包含，且不再按 agent 目录
+    散落多份、版本只看一处。幂等：内容相同不重写，不同则覆盖刷新。
     """
-    dest = Path(dest_dir) / HOOK_NAME
+    dest_dir = Path.home() / HOOK_HOME
+    dest = dest_dir / HOOK_NAME
     src = HOOK_SCRIPT.read_bytes()
     if not dest.exists() or dest.read_bytes() != src:
-        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest_dir.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(src)
     return dest
 
@@ -86,7 +90,7 @@ def install_codex_hooks() -> Path:
     import re
 
     cfg = Path.home() / ".codex" / "config.toml"
-    script = land_hook_script(cfg.parent)
+    script = land_hook_script()
     cfg.parent.mkdir(parents=True, exist_ok=True)
     text = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
 
@@ -129,7 +133,7 @@ def install_codex_hooks() -> Path:
 def install_kimi_hooks() -> Path:
     """kimi 全局 hooks（~/.kimi-code/config.toml 追加 [[hooks]] 块，幂等+备份）。"""
     cfg = Path.home() / ".kimi-code" / "config.toml"
-    script = land_hook_script(cfg.parent)
+    script = land_hook_script()
     cfg.parent.mkdir(parents=True, exist_ok=True)
     content = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
     esc = hook_command(script).replace("\\", "\\\\").replace('"', '\\"')
@@ -157,7 +161,7 @@ def install_grok_hooks() -> Path:
     """
     hooks_dir = Path.home() / ".grok" / "hooks"
     hooks_dir.mkdir(parents=True, exist_ok=True)
-    script = land_hook_script(hooks_dir.parent)
+    script = land_hook_script()
     hooks = hooks_dir / "evo-state.json"
     ours = {"type": "command", "command": hook_command(script), "timeout": 10}
     data: dict = {"hooks": {}}
@@ -196,7 +200,7 @@ def install_claude_project_hooks(project_dir: Path) -> Path:
     只追加我们的 hook，保留用户已有的其它 hook；重复安装不产生重复条目。
     """
     claude_dir = Path(project_dir) / ".claude"
-    script = land_hook_script(claude_dir)
+    script = land_hook_script()
     claude_dir.mkdir(parents=True, exist_ok=True)
     settings = claude_dir / "settings.json"
 

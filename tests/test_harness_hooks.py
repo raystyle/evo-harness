@@ -193,7 +193,15 @@ def test_install_all_opt_in_writes_global(tmp_path, monkeypatch):
     grok_hooks = tmp_path / ".grok" / "hooks" / "evo-state.json"
     data = json.loads(grok_hooks.read_text(encoding="utf-8"))
     assert "SessionStart" in data["hooks"]  # claude 同构、恒信任目录
-    assert (tmp_path / ".grok" / HOOK_NAME).exists()  # 脚本已落配置目录
+    # hook 统一成一个 py：全局唯一落点，四端命令同指
+    central = tmp_path / ".evo-harness" / HOOK_NAME
+    assert central.exists()
+    assert str(central) in data["hooks"]["SessionStart"][0]["hooks"][0]["command"]
+    for cfg in (tmp_path / ".codex" / "config.toml",
+                tmp_path / ".kimi-code" / "config.toml",
+                tmp_path / "proj" / ".claude" / "settings.json"):
+        assert str(central) in cfg.read_text(encoding="utf-8"), cfg
+    assert not (tmp_path / ".grok" / HOOK_NAME).exists()  # 不再按 agent 散落
 
 
 def test_codex_hooks_session_end_timeout_clamped(tmp_path, monkeypatch):
