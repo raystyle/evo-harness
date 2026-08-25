@@ -20,16 +20,26 @@ explore → research → plan → execute ⇄ review → merge → DONE
 
 Python 侧依赖（librmux / rich / watchdog）由 `uv sync` 自动装。
 
+## 安装（独立 CLI，全局命令）
+
+```bash
+uv tool install git+https://github.com/raystyle/evo-harness   # 装为全局 evo-harness 命令
+evo-harness --help                                            # 验证
+```
+
+升级：`uv tool upgrade evo-harness`（或 `--reinstall` 重装到最新 commit）。
+
 ## 快速开始
 
 ```bash
-uv sync                                   # 建 .venv + 装依赖
-uv run evo-harness run "<目标>" --fake    # 确定性模式（不调真 LLM，先验编排）
-uv run evo-harness run "<目标>"           # 真实 agent 六阶段
-uv run evo-harness review-cycle "<目标>" [--rounds N]   # 三 agent 循环 review 到一致
-uv run evo-harness monitor [--run-id ID]  # TUI 控制台（graph loop / 事件流 / 决策面板）
-uv run evo-harness status / wait / abort / decide / contract / clean-wt
+evo-harness run "<目标>" --fake              # 确定性模式（不调真 LLM，先验编排）
+evo-harness run "<目标>"                     # 真实 agent 六阶段
+evo-harness review-cycle "<目标>" [--rounds N]   # 三 agent 循环 review 到一致
+evo-harness monitor [--run-id ID]            # TUI 控制台（graph loop / 事件流 / 决策面板）
+evo-harness status / wait / abort / decide / contract / clean-wt
 ```
+
+开发仓内亦可 `uv sync` 后 `uv run evo-harness …`（同入口）。
 
 herdr 会话内（`HERDR_ENV=1`）起 run：自动落位 monitor 右窗格 + 无头 notifyd +
 flow 专属 rmux 会话，CLI 单行交接即退——决策（※）/终态（✔）由 notifyd 恰在
